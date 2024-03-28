@@ -17,7 +17,7 @@ def process_pipeline(self, index_id: str, pipeline: dict, payload: dict):
 
     # service for managing the tasks db create task
     pipeline_tasks = PipelineTaskSyncService(index_id, task_id)
-    pipeline_tasks.create({"pipeline_tasks": pipeline})
+    # pipeline_tasks.create({"pipeline_tasks": pipeline})
 
     # remove _id because its a bson
     # pipeline.pop("_id", None)

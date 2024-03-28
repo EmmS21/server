@@ -21,38 +21,32 @@ class PipelineTaskSyncService(BaseSyncDBService):
         self.task_id = task_id
         super().__init__("pipeline_tasks", index_id)
 
-    def create(self, connection_id, pipeline_request):
-        pass
-        # # grab connection_id from the pipeline_request
-        # organization_service = OrganizationSyncService()
-        # organization = organization_service.get_organization(self.index_id)
-
-        # connection_information = organization.get("connections", None)
-        # if not connection_information:
-        #     raise NotFoundError("Connection information found")
-
-        # # make a connection request
-        # storage_handler = StorageHandler(connection_information, "mongodb")
-        # if not storage_handler.connect_to_db():
-        #     raise BadRequestError("Failed to connect to the database")
-
-        # new_pipeline = PipelineCreateRequest(
-        #     connection=connection_information,
-        #     source=pipeline_request.source
-        # )
-
-        # print(new_pipeline.model_dump())
-
-        # return self.create_one(obj)
-
 
 class PipelineAsyncService(BaseAsyncDBService):
     def __init__(self, index_id):
         super().__init__("pipelines", index_id)
 
-    async def create(self, full_object: dict):
-        resp = await self.create_one(full_object)
-        return resp
+    async def create(self, connection_id, pipeline_request):
+        # grab connection_id from the pipeline_request
+        organization_service = OrganizationSyncService()
+        organization = organization_service.get_organization(self.index_id)
+
+        connection_information = organization.get("connections", None)
+        if not connection_information:
+            raise NotFoundError("Connection information found")
+
+        # make a connection request
+        storage_handler = StorageHandler(connection_information, "mongodb")
+        if not storage_handler.connect_to_db():
+            raise BadRequestError("Failed to connect to the database")
+
+        new_pipeline = PipelineCreateRequest(
+            connection=connection_information, source=pipeline_request.source
+        )
+
+        print(new_pipeline.model_dump())
+
+        return self.create_one("obj")
 
 
 class PipelineProcessor:
@@ -99,10 +93,11 @@ class PipelineProcessor:
 
     def insert_into_destination(self, obj):
         print("Inserted into destination collection")
+        print(obj)
 
     async def parse_file(self, file_url):
         parse_handler = ParseHandler(file_url)
-        parse_response = await parse_handler.parse(should_chunk=True)
+        parse_response = await parse_handler.parse()
         return json.loads(parse_response.body.decode())
 
     async def process_chunks(self, chunks, file_url):
@@ -126,6 +121,7 @@ class PipelineProcessor:
                 "metadata": chunk["metadata"],
                 "embedding": embedding_response_content["response"]["embedding"],
                 "file_url": file_url,
+                # "contents": None,
             }
             self.insert_into_destination(obj)
 

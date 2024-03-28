@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import BaseModel, Field, EmailStr, validator
 from typing import List, Optional, Union
 
-from utilities.helpers import generate_api_key, current_time
+from utilities.helpers import generate_api_key, current_time, generate_uuid
 from utilities.encryption import SecretCipher
 
 
@@ -31,20 +31,6 @@ class UsagePricing(BaseModel):
     pricing_tier: PricingTier = Field(default=PricingTier.free)
 
 
-class Secret(BaseModel):
-    name: Optional[str] = None
-    value: bytes
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, new_value):
-        cipher = SecretCipher()
-        self._value = cipher.encrypt_string(new_value)
-
-
 class ApiKeyScope(BaseModel):
     user_ids: Optional[List[str]] = None
 
@@ -59,11 +45,14 @@ class ApiKey(BaseModel):
 class Connection(BaseModel):
     engine: ConnectionEngine
     host: str
-    port: int = None
+    port: Optional[int] = None
     database: str
     username: str
     password: bytes
     extra_params: Optional[dict] = None
+    connection_id: str = Field(
+        default_factory=lambda: "conn-" + generate_uuid(length=6, dashes=False)
+    )
 
     @property
     def password(self):
@@ -73,7 +62,11 @@ class Connection(BaseModel):
     @password.setter
     def password(self, new_value):
         cipher = SecretCipher()
-        self.password = cipher.encrypt_string(new_value)
+        # Check if the password is already encrypted
+        if not cipher.is_encrypted(new_value):
+            self._password = cipher.encrypt_string(new_value)
+        else:
+            self._password = new_value
 
     # Validate the port based on the type of database
     @validator("port", always=True)
@@ -107,7 +100,6 @@ class OrganizationBase(BaseModel):
     indexes: List[str] = Field(default_factory=list)
     metadata: dict = Field(default_factory=dict)
     creation_date: datetime = Field(default_factory=current_time)
-    secrets: List[Secret] = Field(default_factory=list)
     api_keys: List[ApiKey] = Field(default_factory=list)
     users: List[User] = Field(default_factory=list)
     permissions: Permissions
@@ -131,7 +123,7 @@ class TrustedOrgResponse(BaseModel):
     users: List[TrustedUserResponse]
     permissions: Permissions
     usage: UsagePricing
-    api_keys: List[ApiKey] = Field(default_factory=list)
+    # api_keys: List[ApiKey] = Field(default_factory=list)
     # connections: List[Connection] = Field(default_factory=list)
 
 
@@ -142,14 +134,8 @@ class CreateOrgRequest(BaseModel):
     user_metadata: Optional[dict] = {}
 
 
-class SecretRequest(BaseModel):
-    name: str
-    value: str
-
-
 class OrganizationUpdateRequest(BaseModel):
     metadata: Optional[dict] = None
-    secrets: Optional[List[Secret]] = None
     api_keys: Optional[List[ApiKey]] = None
     users: Optional[List[User]] = None
     permissions: Optional[Permissions] = None

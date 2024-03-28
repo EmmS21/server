@@ -1,4 +1,4 @@
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 import os
 
 
@@ -29,3 +29,13 @@ class SecretCipher:
         # Convert the decrypted bytes to a string
         decrypted_string = decrypted_bytes.decode("utf-8")
         return decrypted_string
+
+    def is_encrypted(self, s):
+        """Check if a string is encrypted."""
+        try:
+            # Try to decrypt the string
+            self.decrypt_string(s)
+            return True
+        except InvalidToken:
+            # If decryption raises an InvalidToken exception, the string is not encrypted
+            return False

@@ -36,7 +36,7 @@ class ParseHandler:
             raise BadRequestError(error={"message": "Error downloading file"})
 
     def download_text_to_memory(self):
-        return self.contents.encode("utf-8"), ""
+        return self.contents.encode("utf-8"), "file.txt"
 
     def detect_filetype(self, contents):
         try:
@@ -54,9 +54,6 @@ class ParseHandler:
             )
 
     async def parse(self, modality: str, parser_request: ParseFileRequest):
-        contents = None
-        filename = ""
-
         if parser_request.contents:
             contents, filename = self.download_text_to_memory()
         else:

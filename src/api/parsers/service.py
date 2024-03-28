@@ -52,13 +52,13 @@ modality_to_content_types = {
 
 
 class ParseHandler:
-    def __init__(self, file_url):
-        self.file_url = file_url
+    def __init__(self):
+        pass
 
-    async def _get_file_type(self):
+    async def _get_file_type(self, file_url):
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.head(self.file_url)
+                response = await client.head(file_url)
                 if response.status_code == 200:
                     content_type = response.headers.get("content-type")
                     if not content_type:
@@ -71,8 +71,8 @@ class ParseHandler:
                         error={"message": "Error retrieving file info"}
                     )
 
-        except Exception as e:
-            raise BadRequestError(error={"message": "Error retrieving file info"})
+        except Exception:
+            raise BadRequestError(error={"message": "Error downloading file info"})
 
     def _get_modality(self, content_type):
         for modality, content_types in modality_to_content_types.items():
@@ -81,11 +81,16 @@ class ParseHandler:
         raise BadRequestError(f"Content type {content_type} not recognized")
 
     async def parse(self, parser_request: ParseFileRequest):
-        content_type = await self._get_file_type() if self.file_url else "text/plain"
+        # if there is no file_url then modality is automatically text
+        if parser_request.file_url:
+            content_type = await self._get_file_type(parser_request.file_url)
+        else:
+            content_type = "text/plain"
+
         modality = self._get_modality(content_type)
 
         url = f"{services_url}/parse/{modality}"
-        data = json.dumps({"file_url": self.file_url, **parser_request.model_dump()})
+        data = json.dumps(parser_request.model_dump())
 
         try:
             resp = await _send_post_request(url, data, timeout=180)

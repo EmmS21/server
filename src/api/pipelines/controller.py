@@ -13,66 +13,31 @@ from .model import PipelineCreateRequest, PipelineResponse
 
 router = APIRouter()
 
-
-# organizations.connections
-{
-    "connection_information": {
-        "engine": "mongodb",
-        "host": "",
-        "port": "",
-        "username": "",
-        "password": "",
-        "database": "",
-        "collection": "documents",
-    }
-}
-
-
 # pipelines collection
 {
     "enabled": True,
-    "connection": {},
-    "source": {
-        "filters": {"status": "processing"},  # must match all of these
-        "on_operation": ["insert"],
-        "field": {
-            "name": "file_url",
-            "type": "url",  # vs inline
-            "settings": {},
-            "embedding_model": "jinaai/jina-embeddings-v2-base-en",
-        },
-    },
-    "destination": {
-        "collection": "documents_elements",
-        "new_field_name": "file_elements",  # contents of the chunks
-        "new_embeddings": "file_embeddings",
-    },
+    "connection": {},  # pulled from organizations.connections
+    "filters": {"status": "processing"},
+    "on_operation": ["insert"],
+    "collection": "documents",
+    "source_destination_mappings": [  # everything inside here gets processed together
+        {
+            "source": {
+                "name": "file_url",  # field name
+                "type": "url",  # url, contents
+                "parse_settings": {
+                    "pdf": {"infer_table_type": True}
+                },  # parse specific settings for enrique
+                "embedding_model": "jinaai/jina-embeddings-v2-base-en",
+            },
+            "destination": {
+                "collection": "documents_elements",
+                "field": "file_elements",
+                "embeddings": "file_embeddings",
+            },
+        }
+    ],
 }
-
-"""
-Accepts a payload and processes it using the listener service.
-
-Pseudocode:
-1. Grabs all the pipelines from the local db run the following for each:
-    2. match the db & coll provided from the payload with the corresponding pipeleines in the db
-    3. check that the payload matches the doc_filters and operationType
-    4. if the field.type is url:
-        5. download the file
-        6. extract the text
-        7. embed the text
-        8. insert the text, embeddings, and url into the destination collection
-    5. if the field.type is inline:
-        6. extract the text
-        7. embed the text
-        8. insert the text, embeddings, and url into the destination collection
-
-
-Args:
-    request (Request): The incoming request object.
-
-Returns:
-    dict: A dictionary containing the response message.
-"""
 
 
 # invoke pipeline

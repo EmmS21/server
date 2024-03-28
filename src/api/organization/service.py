@@ -1,7 +1,7 @@
 from fastapi import BackgroundTasks, HTTPException
 from pydantic import ValidationError
 
-from utilities.helpers import generate_api_key
+from utilities.helpers import generate_api_key, generate_uuid
 from utilities.encryption import SecretCipher
 
 from db.service import sync_db, mongo_client, BaseSyncDBService

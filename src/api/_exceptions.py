@@ -1,6 +1,8 @@
 from typing import Optional
-
+import traceback
 from functools import wraps
+import sys
+from logger import log
 
 
 def route_exeception_handler(func):
@@ -31,6 +33,7 @@ class APIError(Exception):
         self.status = status
         self.error = error
         self.response = response
+        traceback.print_exc()
         super().__init__(self.error)
 
 

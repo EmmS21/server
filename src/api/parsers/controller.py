@@ -13,5 +13,5 @@ router = APIRouter()
 async def parse_file(
     parser_request: ParseFileRequest,
 ):
-    parse_handler = ParseHandler(parser_request.file_url)
+    parse_handler = ParseHandler()
     return await parse_handler.parse(parser_request)
