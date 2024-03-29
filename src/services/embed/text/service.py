@@ -8,8 +8,9 @@ logging.set_verbosity_error()
 
 class TextEmbeddingService:
     def __init__(self, model):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(model)
-        self.model = AutoModel.from_pretrained(model)
+        self.model = AutoModel.from_pretrained(model).to(self.device)
 
     def mean_pooling(self, model_output, attention_mask):
         token_embeddings = model_output[0]
@@ -23,7 +24,7 @@ class TextEmbeddingService:
     def encode(self, sentences):
         encoded_input = self.tokenizer(
             sentences, padding=True, truncation=True, return_tensors="pt"
-        )
+        ).to(self.device)
 
         with torch.no_grad():
             model_output = self.model(**encoded_input)

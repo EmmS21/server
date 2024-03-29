@@ -4,9 +4,7 @@ from typing import Optional
 
 class ParseFileRequest(BaseModel):
     # Common Settings across Parsers
-    file_url: Optional[str] = (
-        None
-    )
+    file_url: Optional[str] = None
     contents: Optional[str] = None
     should_chunk: Optional[bool] = True
     clean_text: Optional[bool] = True
@@ -21,3 +19,10 @@ class ParseFileRequest(BaseModel):
     pptx_settings: Optional[dict] = {}
     xlsx_settings: Optional[dict] = {}
     txt_settings: Optional[dict] = {}
+
+
+class ParseAudioRequest(BaseModel):
+    file_url: Optional[str] = None
+
+    # Models defined in api/parsers/model.py
+    settings: Optional[dict] = {}

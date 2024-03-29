@@ -3,7 +3,9 @@ from io import BytesIO
 from magika import Magika
 
 from .utils import generate_filename_from_url, get_filename_from_cd
+
 from .text.service import TextParsingService
+from .audio.service import AudioParsingService
 
 from .model import ParseFileRequest
 
@@ -70,6 +72,14 @@ class ParseHandler:
                 parser_request=parser_request,
             )
             output = await text_service.parse()
+
+        elif modality == "audio":
+            audio_service = AudioParsingService(
+                file_stream=stream,
+                metadata=metadata,
+                parser_request=parser_request,
+            )
+            output = await audio_service.parse()
         else:
             raise BadRequestError(error="Modality not supported")
 
