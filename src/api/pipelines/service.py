@@ -7,13 +7,18 @@ from organization.service import OrganizationSyncService
 from .model import PipelineCreateRequest
 
 from parsers.service import ParseHandler
+from parsers.model import ParseFileRequest
+
 from embed.service import EmbeddingHandler
 from storage.service import StorageHandler
 
 
-async def process_orchestrator(index_id: str, pipeline: dict, payload: dict):
-    pipeline_processor = PipelineProcessor(index_id, pipeline)
-    return await pipeline_processor.process(payload)
+async def process_orchestrator(
+    index_id: str, task_id: str, pipeline: dict, payload: dict
+):
+    if pipeline["enabled"]:
+        pipeline_processor = PipelineProcessor(index_id, task_id, pipeline)
+        return await pipeline_processor.process(payload)
 
 
 class PipelineTaskSyncService(BaseSyncDBService):
@@ -50,96 +55,103 @@ class PipelineAsyncService(BaseAsyncDBService):
 
 
 class PipelineProcessor:
-    def __init__(self, index_id, pipeline: dict):
+    def __init__(self, index_id, task_id, pipeline):
         self.index_id = index_id
         self.pipeline = pipeline
+        self.task_id = task_id
+        self.storage_handler = StorageHandler(
+            connection_info=self.pipeline["connection"],
+            engine=self.pipeline["connection"]["engine"],
+        )
 
-        """
-            1. check if the connection exists in the organization
-            2. decrypt the connection information
-            3. create a connection to the source
-            4. create a connection to the destination
-            5. create a change handler
-            6. process the change
-            7. return tƒhe response and insert it into the db
-        """
+    async def connect_to_db(self):
+        self.storage_client = await self.storage_handler.connect_to_db()
+        if not self.storage_client:
+            raise BadRequestError("Failed to connect to the database")
+        else:
+            print("Connected to the database")
 
-    # async def check_connection(self, organization):
-    #     # Check if the connection exists in the organization
-    #     pass
-
-    # async def decrypt_connection_info(self, connection_info):
-    #     # Decrypt the connection information
-    #     pass
-
-    # async def create_source_connection(self, decrypted_info):
-    #     # Create a connection to the source
-    #     pass
-
-    # async def create_destination_connection(self, decrypted_info):
-    #     # Create a connection to the destination
-    #     pass
-
-    # async def create_change_handler(self):
-    #     # Create a change handler
-    #     pass
-
-    # async def process_change(self, change):
-    #     # Process the change
-    #     pass
-
-    async def log_error_in_tasks_db(self, response):
+    def log_error_in_tasks_db(self, response):
         print(response)
 
-    def insert_into_destination(self, obj):
-        print("Inserted into destination collection")
-        print(obj)
+    def insert_into_destination(self, obj, destination):
+        print(f"Inserted into {obj} into {destination}")
 
-    async def parse_file(self, file_url):
-        parse_handler = ParseHandler(file_url)
-        parse_response = await parse_handler.parse()
+    async def parse_file(self, parser_request):
+        parse_handler = ParseHandler()
+        parse_request = ParseFileRequest(**parser_request)
+        parse_response = await parse_handler.parse(parse_request)
+        # need to decode because its a success response
         return json.loads(parse_response.body.decode())
 
-    async def process_chunks(self, chunks, file_url):
-        embed_handler = EmbeddingHandler(model="jinaai/jina-embeddings-v2-base-en")
+    async def process_chunks(self, embedding_model, chunks, destination):
+        embed_handler = EmbeddingHandler(modality="text", model=embedding_model)
         for chunk in chunks:
             embedding_response = await embed_handler.encode({"input": chunk["text"]})
+            # need to decode because its a success response
             embedding_response_content = json.loads(embedding_response.body.decode())
 
+            # if it failed just continue to the next one
             if not embedding_response_content.get("success"):
                 await self.log_error_in_tasks_db(
                     {
-                        "task_id": "1",
+                        "task_id": self.task_id,
                         "status_code": embedding_response_content["status"],
                         "error": embedding_response_content["message"],
                     }
                 )
                 continue
 
+            embedding = embedding_response_content["response"]["embedding"]
             obj = {
                 "text": chunk["text"],
                 "metadata": chunk["metadata"],
-                "embedding": embedding_response_content["response"]["embedding"],
-                "file_url": file_url,
+                destination["embedding"]: embedding,
+                "foreign_key": "123",  # this should be a foreign key from the source payload
                 # "contents": None,
             }
-            self.insert_into_destination(obj)
+            self.insert_into_destination(obj, destination)
 
     async def process(self, payload):
-        file_url = payload["file_url"]
-        parse_response_content = await self.parse_file(file_url)
+        # connect to the db
+        # await self.connect_to_db()
 
-        if not parse_response_content.get("success"):
-            await self.log_error_in_tasks_db(
-                {
-                    "task_id": "1",
-                    "status_code": parse_response_content["status"],
-                    "error": parse_response_content["message"],
-                }
+        # normalize the client supplied payload to a common format
+        prepared_payload = self.storage_handler.handle_payload(payload)
+
+        # iterate over each source_destination mapping in the pipeline configuration
+        for source_destination_mapping in self.pipeline["source_destination_mappings"]:
+
+            # the source configuration from the pipeline
+            source_configuration = source_destination_mapping["source"]
+
+            # grab the pipeline source value from the client supplied payload
+            client_payload_value = prepared_payload.get(
+                source_configuration["name"], None
             )
-            return None
 
-        await self.process_chunks(parse_response_content["response"]["text"], file_url)
+            # prepare the parse request
+            parse_request = {
+                source_configuration["type"]: client_payload_value,
+                **source_configuration.get("settings", {}),
+            }
 
+            # response from the parse request
+            parse_response_content = await self.parse_file(parse_request)
 
-# Assuming ParseHandler and EmbeddingHandler are defined elsewhere and compatible with these changes.
+            # if it failed, end the process
+            if not parse_response_content.get("success"):
+                await self.log_error_in_tasks_db(
+                    {
+                        "task_id": self.task_id,
+                        "status_code": parse_response_content["status"],
+                        "error": parse_response_content["message"],
+                    }
+                )
+                return None
+
+            await self.process_chunks(
+                embedding_model=source_destination_mapping["embedding_model"],
+                chunks=parse_response_content["response"]["text"],
+                destination=source_destination_mapping["destination"],
+            )

@@ -50,9 +50,9 @@ class Connection(BaseModel):
     username: str
     password: bytes
     extra_params: Optional[dict] = None
-    connection_id: str = Field(
-        default_factory=lambda: "conn-" + generate_uuid(length=6, dashes=False)
-    )
+    # connection_id: str = Field(
+    #     default_factory=lambda: "conn-" + generate_uuid(length=6, dashes=False)
+    # )
 
     @property
     def password(self):

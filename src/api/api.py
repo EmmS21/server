@@ -16,6 +16,7 @@ from workflows.controller import router as workflow_router
 from generate.controller import router as generate_router
 from embed.controller import router as embed_router
 from pipelines.controller import router as pipeline_router
+from storage.controller import router as storage_router
 
 api_router = APIRouter()
 
@@ -52,6 +53,7 @@ api_router.include_router(parsers_router, prefix="/parsers", tags=["Parsers"], d
 api_router.include_router(workflow_router, prefix="/workflows", tags=["Workflows"], dependencies=[Depends(get_index_id)])
 api_router.include_router(generate_router, prefix="/generate", tags=["Generaters"], dependencies=[Depends(get_index_id)])
 api_router.include_router(embed_router, prefix="/embed", tags=["Embedders"], dependencies=[Depends(get_index_id)])
+api_router.include_router(storage_router, prefix="/storage", tags=["Storage"], dependencies=[Depends(get_index_id)])
 
 
 # fmt: on

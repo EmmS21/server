@@ -7,36 +7,53 @@ from rate_limiter import limiter
 from utilities.methods import create_success_response
 from _exceptions import route_exeception_handler, NotFoundError
 
-from .service import PipelineAsyncService
+from .service import PipelineAsyncService, process_orchestrator
 from .tasks import process_pipeline
 from .model import PipelineCreateRequest, PipelineResponse
 
 router = APIRouter()
 
 # pipelines collection
-{
+pipeline = {
     "enabled": True,
-    "connection": {},  # pulled from organizations.connections
-    "filters": {"status": "processing"},
-    "on_operation": ["insert"],
+    "connection": {
+        "engine": "mongodb",
+        "host": "sandbox.mhsby.mongodb.net",
+        "database": "use_cases",
+        "username": "sandbox",
+        "password": "UT086Nt4m1V2DMRA",
+    },
+    # "filters": {"status": "processing"},
+    # "on_operation": ["insert"],
     "collection": "documents",
     "source_destination_mappings": [  # everything inside here gets processed together
         {
+            "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
             "source": {
-                "name": "file_url",  # field name
-                "type": "url",  # url, contents
-                "parse_settings": {
-                    "pdf": {"infer_table_type": True}
-                },  # parse specific settings for enrique
-                "embedding_model": "jinaai/jina-embeddings-v2-base-en",
+                "name": "my_file_url",  # field name
+                "type": "file_url",  # file_url, contents
+                "settings": {},
             },
             "destination": {
                 "collection": "documents_elements",
                 "field": "file_elements",
-                "embeddings": "file_embeddings",
+                "embedding": "file_embeddings",
             },
         }
     ],
+}
+
+payload = {
+    "_id": {"_data": "..."},
+    "operationType": "insert",
+    "clusterTime": {"$timestamp": {"t": 1711225660, "i": 1}},
+    "wallTime": "2024-03-23T20:27:40.270Z",
+    "fullDocument": {
+        "_id": "65ff3b3ac3dfd5ef4fb1d2f7",
+        "my_file_url": "https://nux-sandbox.s3.us-east-2.amazonaws.com/marketing/ethan-resume.pdf",
+    },
+    "ns": {"db": "use_cases", "coll": "legal_cases"},
+    "documentKey": {"_id": "65ff3b3ac3dfd5ef4fb1d2f7"},
 }
 
 
@@ -47,7 +64,7 @@ router = APIRouter()
 async def invoke_pipeline(request: Request, pipeline_id: str):
     payload = await request.json()
     pipeline_service = PipelineAsyncService(request.index_id)
-    pipeline = await pipeline_service.get_one({"pipeline_id": pipeline_id})
+    # pipeline = await pipeline_service.get_one({"pipeline_id": pipeline_id})
 
     # if not pipeline:
     #     raise NotFoundError("Pipeline not found.")
