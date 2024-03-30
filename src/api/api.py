@@ -10,7 +10,7 @@ from starlette.responses import JSONResponse
 from auth.service import get_index_id
 
 # Local application/library specific imports
-from organization.controller import router as organization_router
+from users.controller import router as user_router
 from parsers.controller import router as parsers_router
 from workflows.controller import router as workflow_router
 from generate.controller import router as generate_router
@@ -42,9 +42,7 @@ api_router = APIRouter(
 
 
 # unauthenticated
-api_router.include_router(
-    organization_router, prefix="/organizations", tags=["Organization"]
-)
+api_router.include_router(user_router, prefix="/users", tags=["Users"])
 
 # authenticated
 # fmt: off

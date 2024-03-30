@@ -20,8 +20,7 @@ def generate_uuid(length=36, dashes=True):
 
 
 def current_time():
-    return datetime.utcnow()
-
+    return datetime.utcnow().isoformat()
 
 def unique_name(exclude_list=[]):
     haikunator = Haikunator()

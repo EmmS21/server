@@ -1,5 +1,7 @@
 from fastapi import Header, Request
-from organization.service import OrganizationSyncService
+from users.service import UserService
+
+# from organization.service import OrganizationSyncService
 from typing import Optional
 
 from _exceptions import BadRequestError, NotFoundError
@@ -25,9 +27,7 @@ def get_index_id(
         raise BadRequestError(error="Invalid authorization header format")
 
     try:
-        index_id, organization = OrganizationSyncService().get_index_ids(
-            api_key, index_id
-        )
+        index_id = UserService().get_index_ids(api_key, index_id)
     except Exception as e:
         raise NotFoundError(error="Invalid API key")
 

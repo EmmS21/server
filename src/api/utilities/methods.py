@@ -6,6 +6,10 @@ import httpx
 from _exceptions import InternalServerError
 import time
 import pytz
+from bson import ObjectId
+import json
+from starlette.responses import Response
+
 
 
 def generate_uuid(length=36, dashes=True):
@@ -21,17 +25,25 @@ def current_time():
 
 
 def create_json_response(
-    success: bool, status: int, error: str, response: Optional[str]
+    success: bool, status: int, error: str, response: Optional[dict]
 ):
-    return JSONResponse(
-        content={
+    content = json.dumps(
+        {
             "success": success,
             "status": status,
             "error": error,
             "response": response,
         },
-        status_code=status,
+        cls=JSONEncoder,
     )
+    return Response(content, status_code=status, media_type="application/json")
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
 
 
 def create_success_response(response: Optional[str]):
