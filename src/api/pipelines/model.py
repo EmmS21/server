@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from utilities.helpers import unique_name, generate_uuid
 from utilities.encryption import SecretCipher
 
-from organization.model import Connection
+from users.model import Connection
 
 
 # Enumerations

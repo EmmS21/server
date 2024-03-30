@@ -65,7 +65,16 @@ class UserService:
         query = {"api_keys.key": api_key}
         if index_id:
             query["index_ids"] = index_id
-        user_data = self.collection.find_one(query, {"index_ids": 1})
+        user_data = self.collection.find_one(query, {"index_ids": 1, "_id": 0})
         if not user_data:
             raise NotFoundError("User not found")
-        return user_data.get("index_ids")
+        return user_data.get("index_ids")[0]  # TODO: temporary fix for now
+
+    def get_user_by_email(self, user: UserRequest) -> Optional[User]:
+        """
+        Retrieve a user by their email.
+        """
+        user_data = self.collection.find_one({"email": user.email})
+        if not user_data:
+            raise NotFoundError("User not found")
+        return create_success_response(user_data)

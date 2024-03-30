@@ -4,7 +4,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from _exceptions import NotFoundError
 
-from organization.model import Connection
+from users.model import Connection
 
 # changes
 # insert

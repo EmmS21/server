@@ -34,6 +34,8 @@ async def run_workflow(
     parameters: dict = Body(...),
     websocket_id: Optional[str] = None,
 ):
+    
+    print(request.index_id)
 
     workflow_service = WorkflowSyncService(request.index_id)
     workflow = workflow_service.get_and_validate(workflow_id)

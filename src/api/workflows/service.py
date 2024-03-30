@@ -68,14 +68,14 @@ class WorkflowSyncService(BaseSyncDBService):
         workflow_response = {
             "workflow_id": new_workflow.workflow_id,
             "workflow_name": new_workflow.workflow_name,
-            "created_at": new_workflow.created_at.isoformat(),
+            "created_at": new_workflow.created_at,
             "metadata": {
                 "serverless_function_name": new_workflow.metadata[
                     "serverless_function_name"
                 ],
                 "serverless_last_edited": new_workflow.metadata[
                     "serverless_last_edited"
-                ].isoformat(),
+                ],
             },
         }
 
@@ -83,6 +83,7 @@ class WorkflowSyncService(BaseSyncDBService):
 
     def get_and_validate(self, workflow_id):
         workflow = self.get(workflow_id)
+        print(workflow)
         if not workflow:
             raise NotFoundError(error={"message": f"Workflow {workflow_id} not found."})
         if workflow.get("metadata", {}).get("serverless_function_name") is None:

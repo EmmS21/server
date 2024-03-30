@@ -2,7 +2,7 @@ import json
 from db.service import BaseAsyncDBService, BaseSyncDBService
 from _exceptions import BadRequestError, NotFoundError
 
-from organization.service import OrganizationSyncService
+from users.service import UserService
 
 from .model import PipelineCreateRequest
 
@@ -32,24 +32,24 @@ class PipelineAsyncService(BaseAsyncDBService):
         super().__init__("pipelines", index_id)
 
     async def create(self, connection_id, pipeline_request):
-        # grab connection_id from the pipeline_request
-        organization_service = OrganizationSyncService()
-        organization = organization_service.get_organization(self.index_id)
+        # # grab connection_id from the pipeline_request
+        # organization_service = OrganizationSyncService()
+        # organization = organization_service.get_organization(self.index_id)
 
-        connection_information = organization.get("connections", None)
-        if not connection_information:
-            raise NotFoundError("Connection information found")
+        # connection_information = organization.get("connections", None)
+        # if not connection_information:
+        #     raise NotFoundError("Connection information found")
 
-        # make a connection request
-        storage_handler = StorageHandler(connection_information, "mongodb")
-        if not storage_handler.connect_to_db():
-            raise BadRequestError("Failed to connect to the database")
+        # # make a connection request
+        # storage_handler = StorageHandler(connection_information, "mongodb")
+        # if not storage_handler.connect_to_db():
+        #     raise BadRequestError("Failed to connect to the database")
 
-        new_pipeline = PipelineCreateRequest(
-            connection=connection_information, source=pipeline_request.source
-        )
+        # new_pipeline = PipelineCreateRequest(
+        #     connection=connection_information, source=pipeline_request.source
+        # )
 
-        print(new_pipeline.model_dump())
+        # print(new_pipeline.model_dump())
 
         return self.create_one("obj")
 

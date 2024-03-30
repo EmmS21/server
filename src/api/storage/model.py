@@ -1,4 +1,4 @@
-from organization.model import Connection
+from users.model import Connection
 
 
 class StorageConnection(Connection):

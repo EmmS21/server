@@ -8,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from config import mongo_url, redis_url
 import json
 from utilities.helpers import current_time
+from utilities.methods import JSONEncoder
 
 from celery import Celery
 
@@ -19,15 +20,8 @@ celery_app = Celery(
 )
 
 
-class JSONEncoderCustom(JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return JSONEncoder.default(self, o)
-
-
 def json_dumps(data):
-    return dumps(data, cls=JSONEncoderCustom)
+    return dumps(data, cls=JSONEncoder)
 
 
 register(
