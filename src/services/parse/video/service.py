@@ -1,5 +1,5 @@
 from ..model import ParseFileRequest
-from .base_parser import AudioParser
+from .base_parser import VideoParser
 
 from io import BytesIO
 from typing import Union, List, Dict
@@ -22,12 +22,12 @@ class ParserFactory:
     @staticmethod
     def get_parser(file_ext: str) -> ParserInterface:
         parsers = {
-            "mp3": AudioParser(),
-            "wav": AudioParser(),
-            "aac": AudioParser(),
-            "aiff": AudioParser(),
-            "flac": AudioParser(),
-            "ogg": AudioParser(),
+            "mp4": VideoParser(),
+            "avi": VideoParser(),
+            "flv": VideoParser(),
+            "wmv": VideoParser(),
+            "mov": VideoParser(),
+            "mkv": VideoParser(),
         }
         parser = parsers.get(file_ext.lower())
         if not parser:
@@ -35,7 +35,7 @@ class ParserFactory:
         return parser
 
 
-class AudioParsingService:
+class VideoParsingService:
     def __init__(
         self, file_stream: BytesIO, metadata: dict, parser_request: ParseFileRequest
     ):

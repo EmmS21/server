@@ -20,3 +20,4 @@ class ParseFileRequest(BaseModel):
     xlsx_settings: Optional[dict] = {}
     txt_settings: Optional[dict] = {}
     audio_settings: Optional[dict] = {}
+    image_settings: Optional[dict] = {}

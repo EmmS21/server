@@ -10,6 +10,12 @@ class PartitionStrategy:
     HI_RES = "hi_res"
 
 
+class ImageStrategy:
+    OCR = "ocr"
+    OBJECT = "object"
+    AUTO = "auto"
+
+
 class PDFParams(BaseModel):
     strategy: str = Field(
         default=PartitionStrategy.AUTO,
@@ -71,6 +77,17 @@ class AudioParams(BaseModel):
     )
 
 
+class ImageParams(BaseModel):
+    strategy: str = Field(
+        default=ImageStrategy.AUTO,
+        description="The strategy to use for parsing the image. Valid strategies are 'ocr', 'object', and 'auto'.",
+    )
+
+
+class VideoParams(BaseModel):
+    pass
+
+
 class ParseFileRequest(BaseModel):
     # Common Settings across Parsers
     file_url: Optional[str] = Field(
@@ -85,7 +102,7 @@ class ParseFileRequest(BaseModel):
     clean_text: Optional[bool] = True
     max_characters_per_chunk: Optional[int] = None
 
-    # Parser Specific Settings
+    # Parser Specific Settings for text/unstructured
     pdf_settings: Optional[PDFParams] = PDFParams()
     html_settings: Optional[HTMLParams] = HTMLParams()
     csv_settings: Optional[CSVParams] = CSVParams()
@@ -93,7 +110,15 @@ class ParseFileRequest(BaseModel):
     pptx_settings: Optional[PPTXParams] = PPTXParams()
     xlsx_settings: Optional[XLSXParams] = XLSXParams()
     txt_settings: Optional[TXTParams] = TXTParams()
+
+    # Parser Specific Settings for audio
     audio_settings: Optional[AudioParams] = AudioParams()
+
+    # Parser Specific Settings for image
+    image_settings: Optional[ImageParams] = ImageParams()
+
+    # Parser Specific Settings for video
+    video_settings: Optional[VideoParams] = VideoParams()
 
     @root_validator(pre=True)
     def check_mutually_exclusive_fields(cls, values):

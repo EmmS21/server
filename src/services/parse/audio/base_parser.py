@@ -9,7 +9,7 @@ import uuid
 from _exceptions import InternalServerError
 
 
-class MP3Parser:
+class AudioParser:
     def __init__(self):
         # Check for GPU availability
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

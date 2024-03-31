@@ -6,6 +6,8 @@ from .utils import generate_filename_from_url, get_filename_from_cd
 
 from .text.service import TextParsingService
 from .audio.service import AudioParsingService
+from .image.service import ImageParsingService
+from .video.service import VideoParsingService
 
 from .model import ParseFileRequest
 
@@ -79,6 +81,22 @@ class ParseHandler:
                 parser_request=parser_request,
             )
             output = await audio_service.parse()
+
+        elif modality == "image":
+            image_service = ImageParsingService(
+                file_stream=stream,
+                metadata=metadata,
+                parser_request=parser_request,
+            )
+            output = await image_service.parse()
+
+        elif modality == "video":
+            video_service = VideoParsingService(
+                file_stream=stream,
+                metadata=metadata,
+                parser_request=parser_request,
+            )
+            output = await video_service.parse()
         else:
             raise BadRequestError(error="Modality not supported")
 

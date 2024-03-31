@@ -1,5 +1,5 @@
 from ..model import ParseFileRequest
-from .png import ImageParser
+from .base_parser import ImageParser
 
 from io import BytesIO
 from typing import Union, List, Dict
@@ -21,7 +21,15 @@ class ParserInterface(ABC):
 class ParserFactory:
     @staticmethod
     def get_parser(file_ext: str) -> ParserInterface:
-        parsers = {"png": ImageParser()}
+        parsers = {
+            "png": ImageParser(),
+            "jpg": ImageParser(),
+            "jpeg": ImageParser(),
+            "bmp": ImageParser(),
+            "gif": ImageParser(),
+            "tiff": ImageParser(),
+            "jfif": ImageParser(),
+        }
         parser = parsers.get(file_ext.lower())
         if not parser:
             raise BadRequestError(error=f"Unsupported file type: {file_ext.lower()}")

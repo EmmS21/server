@@ -36,13 +36,10 @@ modality_to_content_types = {
         "audio/ogg",
         "audio/flac",
         "audio/mp4",
-        "audio/x-ms-wma",
         "audio/aac",
     ],
     "video": [
         "video/mp4",
-        "video/x-matroska",
-        "video/webm",
         "video/x-msvideo",
         "video/quicktime",
         "video/x-ms-wmv",
