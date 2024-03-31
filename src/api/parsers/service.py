@@ -87,7 +87,7 @@ class ParseHandler:
         else:
             content_type = "text/plain"
 
-        modality = self._get_modality(content_type)
+        modality = self._get_modality(content_type.lower())
 
         url = f"{services_url}/parse/{modality}"
         data = json.dumps(parser_request.model_dump())
