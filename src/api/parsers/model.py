@@ -64,6 +64,13 @@ class TXTParams(BaseModel):
     pass
 
 
+class AudioParams(BaseModel):
+    interval_range: Optional[int] = Field(
+        default=5,
+        description="The range of time in seconds to split the audio into chunks.",
+    )
+
+
 class ParseFileRequest(BaseModel):
     # Common Settings across Parsers
     file_url: Optional[str] = Field(
@@ -86,6 +93,7 @@ class ParseFileRequest(BaseModel):
     pptx_settings: Optional[PPTXParams] = PPTXParams()
     xlsx_settings: Optional[XLSXParams] = XLSXParams()
     txt_settings: Optional[TXTParams] = TXTParams()
+    audio_settings: Optional[AudioParams] = AudioParams()
 
     @root_validator(pre=True)
     def check_mutually_exclusive_fields(cls, values):

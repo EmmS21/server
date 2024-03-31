@@ -1,5 +1,5 @@
 from ..model import ParseFileRequest
-from .mp3 import MP3Parser
+from .png import ImageParser
 
 from io import BytesIO
 from typing import Union, List, Dict
@@ -21,21 +21,14 @@ class ParserInterface(ABC):
 class ParserFactory:
     @staticmethod
     def get_parser(file_ext: str) -> ParserInterface:
-        parsers = {
-            "mp3": MP3Parser(),
-            "wav": MP3Parser(),
-            "aac": MP3Parser(),
-            "aiff": MP3Parser(),
-            "flac": MP3Parser(),
-            "ogg": MP3Parser(),
-        }
+        parsers = {"png": ImageParser()}
         parser = parsers.get(file_ext.lower())
         if not parser:
             raise BadRequestError(error=f"Unsupported file type: {file_ext.lower()}")
         return parser
 
 
-class AudioParsingService:
+class ImageParsingService:
     def __init__(
         self, file_stream: BytesIO, metadata: dict, parser_request: ParseFileRequest
     ):

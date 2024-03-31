@@ -19,10 +19,4 @@ class ParseFileRequest(BaseModel):
     pptx_settings: Optional[dict] = {}
     xlsx_settings: Optional[dict] = {}
     txt_settings: Optional[dict] = {}
-
-
-class ParseAudioRequest(BaseModel):
-    file_url: Optional[str] = None
-
-    # Models defined in api/parsers/model.py
-    settings: Optional[dict] = {}
+    audio_settings: Optional[dict] = {}
