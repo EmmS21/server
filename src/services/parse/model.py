@@ -10,6 +10,10 @@ class ParseFileRequest(BaseModel):
     clean_text: Optional[bool] = True
     max_characters_per_chunk: Optional[int] = None
 
+    # Common Settings across Parsers
+    extract_tags: Optional[bool] = False
+    summarize: Optional[bool] = False
+
     # Parser Specific Settings
     # Models defined in api/parsers/model.py
     pdf_settings: Optional[dict] = {}

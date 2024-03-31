@@ -2,12 +2,17 @@ import httpx
 from io import BytesIO
 from magika import Magika
 
-from .utils import generate_filename_from_url, get_filename_from_cd
+from .utils import (
+    generate_filename_from_url,
+    get_filename_from_cd,
+    TextProcessingPipeline,
+)
 
 from .text.service import TextParsingService
 from .audio.service import AudioParsingService
 from .image.service import ImageParsingService
 from .video.service import VideoParsingService
+
 
 from .model import ParseFileRequest
 
@@ -97,7 +102,19 @@ class ParseHandler:
                 parser_request=parser_request,
             )
             output = await video_service.parse()
+
         else:
             raise BadRequestError(error="Modality not supported")
 
-        return create_success_response({modality: output, "metadata": metadata})
+        pipeline = TextProcessingPipeline()
+
+        # additional params to process
+        if parser_request.extract_tags:
+            tags = await pipeline.extract_tags(output, "text")
+            metadata.update({"tags": tags})
+
+        # if parser_request.summarize:
+        #     summary = await pipeline.summarize(output, "text")
+        #     metadata.update({"summary": summary})
+
+        return create_success_response({"output": output, "metadata": metadata})
