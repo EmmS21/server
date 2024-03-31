@@ -28,8 +28,7 @@ class ParseHandler:
                     )
                     if not filename:
                         filename = generate_filename_from_url(self.file_url)
-                    else:
-                        raise BadRequestError(error={"message": "Filename not found"})
+
                     return response.content, filename
                 else:
                     raise BadRequestError(error={"message": "Error downloading file"})

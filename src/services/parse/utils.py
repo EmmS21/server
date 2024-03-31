@@ -8,7 +8,7 @@ def get_filename_from_cd(cd):
     """
     if not cd or "filename=" not in cd:
         return None
-    fname = cd.split("filename=")[1]
+    fname = cd.split("filename=")[1].split(";")[0]
     if fname.lower().startswith(("'", '"')):
         fname = fname[1:-1]
     return unquote(fname)
