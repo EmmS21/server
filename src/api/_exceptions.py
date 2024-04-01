@@ -66,6 +66,16 @@ class BadRequestError(APIError):
         )
 
 
+class DuplicateError(APIError):
+    def __init__(self, error: Optional[dict] = None, response: Optional[dict] = None):
+        super().__init__(
+            success=False,
+            status=409,
+            error=error or {"message": "Duplicate Entry"},
+            response=response,
+        )
+
+
 class UnsupportedModelProviderError(Exception):
     """Exception raised for unsupported model provider."""
 

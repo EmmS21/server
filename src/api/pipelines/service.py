@@ -66,7 +66,7 @@ class PipelineProcessor:
 
     async def connect_to_db(self):
         self.storage_client = await self.storage_handler.connect_to_db()
-        if not self.storage_client:
+        if self.storage_client is None:
             raise BadRequestError("Failed to connect to the database")
         else:
             print("Connected to the database")
@@ -74,8 +74,22 @@ class PipelineProcessor:
     def log_error_in_tasks_db(self, response):
         print(response)
 
-    def insert_into_destination(self, obj, destination):
-        print(f"Inserted into {obj} into {destination}")
+    async def insert_into_destination(self, obj, destination, destination_id):
+        try:
+            collection = self.storage_client[destination["collection"]]
+
+            filter = {"_id": destination_id}
+            update = {"$push": {destination["field"]: obj}}
+
+            # Perform the update operation with upsert=True to insert if the document does not exist.
+            result = await collection.update_one(filter, update, upsert=True)
+            if result.upserted_id is not None:
+                print(f"Inserted a new document with ID: {result.upserted_id}")
+            else:
+                print(f"Updated an existing document.")
+
+        except Exception as e:
+            print(f"🚨 insert failed: {e}")
 
     async def parse_file(self, parser_request):
         parse_handler = ParseHandler()
@@ -84,7 +98,9 @@ class PipelineProcessor:
         # need to decode because its a success response
         return json.loads(parse_response.body.decode())
 
-    async def process_chunks(self, embedding_model, chunks, destination):
+    async def process_chunks(
+        self, embedding_model, chunks, destination, destination_id
+    ):
         embed_handler = EmbeddingHandler(modality="text", model=embedding_model)
         for chunk in chunks:
             embedding_response = await embed_handler.encode({"input": chunk["text"]})
@@ -104,17 +120,17 @@ class PipelineProcessor:
 
             embedding = embedding_response_content["response"]["embedding"]
             obj = {
-                "text": chunk["text"],
-                "metadata": chunk["metadata"],
+                destination["field"]: {
+                    "text": chunk["text"],
+                    "metadata": chunk["metadata"],
+                },
                 destination["embedding"]: embedding,
-                "foreign_key": "123",  # this should be a foreign key from the source payload
-                # "contents": None,
             }
-            self.insert_into_destination(obj, destination)
+            await self.insert_into_destination(obj, destination, destination_id)
 
     async def process(self, payload):
         # connect to the db
-        # await self.connect_to_db()
+        await self.connect_to_db()
 
         # normalize the client supplied payload to a common format
         prepared_payload = self.storage_handler.handle_payload(payload)
@@ -152,6 +168,7 @@ class PipelineProcessor:
 
             await self.process_chunks(
                 embedding_model=source_destination_mapping["embedding_model"],
-                chunks=parse_response_content["response"]["text"],
+                chunks=parse_response_content["response"]["output"],
                 destination=source_destination_mapping["destination"],
+                destination_id=payload.get("fullDocument", None).get("_id", None),
             )
