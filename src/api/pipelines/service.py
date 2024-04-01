@@ -76,19 +76,12 @@ class PipelineProcessor:
     def log_error_in_tasks_db(self, response):
         print(response)
 
-    async def insert_into_destination(self, obj, destination, destination_id):
+    async def insert_into_destination(self, obj, destination):
         try:
             collection = self.storage_client[destination["collection"]]
 
-            filter = {"_id": ObjectId(destination_id)}
-            update = {"$push": {destination["field"]: obj}}
-
             # Perform the update operation with upsert=True to insert if the document does not exist.
-            result = await collection.update_one(filter, update, upsert=True)
-            if result.upserted_id is not None:
-                print(f"Inserted a new document with ID: {result.upserted_id}")
-            else:
-                print(f"Updated an existing document.")
+            result = await collection.insert_one(obj)
 
         except Exception as e:
             print(f"🚨 insert failed: {e}")
@@ -100,9 +93,7 @@ class PipelineProcessor:
         # need to decode because its a success response
         return json.loads(parse_response.body.decode())
 
-    async def process_chunks(
-        self, embedding_model, chunks, destination, destination_id
-    ):
+    async def process_chunks(self, embedding_model, chunks, destination):
         embed_handler = EmbeddingHandler(modality="text", model=embedding_model)
         for chunk in chunks:
             embedding_response = await embed_handler.encode({"input": chunk["text"]})
@@ -128,7 +119,7 @@ class PipelineProcessor:
                 },
                 destination["embedding"]: embedding,
             }
-            await self.insert_into_destination(obj, destination, destination_id)
+            await self.insert_into_destination(obj, destination)
 
     async def process(self, payload):
         # connect to the db
@@ -172,5 +163,4 @@ class PipelineProcessor:
                 embedding_model=source_destination_mapping["embedding_model"],
                 chunks=parse_response_content["response"]["output"],
                 destination=source_destination_mapping["destination"],
-                destination_id=payload.get("fullDocument", None).get("_id", None),
             )

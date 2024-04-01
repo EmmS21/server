@@ -14,6 +14,8 @@ def route_exeception_handler(func):
             raise BadRequestError(error=e.error)
         except NotFoundError as e:
             raise NotFoundError(error=e.error)
+        except DuplicateError as e:
+            raise DuplicateError(error=e.error)
         except InternalServerError as e:
             raise InternalServerError(error=e.error)
 
