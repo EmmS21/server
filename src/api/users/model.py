@@ -100,3 +100,11 @@ class User(BaseModel):
 class UserRequest(BaseModel):
     email: EmailStr
     metadata: dict = Field(default_factory=lambda: {})
+
+class UpdateUserRequest(BaseModel):
+    api_keys: Optional[List[APIKey]] = Field(None)
+    metadata: Optional[dict] = Field(None)
+    connections: Optional[List[Connection]] = None
+
+    class Config:
+        extra = "forbid"  # forbid extra fields

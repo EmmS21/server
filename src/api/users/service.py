@@ -41,13 +41,16 @@ class UserService:
         return User(**user_data)
 
     def update_user(self, index_id, updated_data):
-        filters = {"indexes": index_id}
+        filters = {"index_ids": index_id}
 
-        return self.collection.find_one_and_update(
+        user_data = self.collection.find_one_and_update(
             filters,
             {"$set": updated_data},
             return_document=ReturnDocument.AFTER,
         )
+        if not user_data:
+            raise NotFoundError("User not found")
+        return create_success_response(user_data)
 
     def get_user_by_api_key(self, api_key: str) -> Optional[User]:
         """
