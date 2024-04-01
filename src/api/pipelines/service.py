@@ -1,6 +1,8 @@
 import json
 from db.service import BaseAsyncDBService, BaseSyncDBService
 from _exceptions import BadRequestError, NotFoundError
+from bson import ObjectId
+
 
 from users.service import UserService
 
@@ -78,7 +80,7 @@ class PipelineProcessor:
         try:
             collection = self.storage_client[destination["collection"]]
 
-            filter = {"_id": destination_id}
+            filter = {"_id": ObjectId(destination_id)}
             update = {"$push": {destination["field"]: obj}}
 
             # Perform the update operation with upsert=True to insert if the document does not exist.
@@ -143,7 +145,7 @@ class PipelineProcessor:
 
             # grab the pipeline source value from the client supplied payload
             client_payload_value = prepared_payload.get(
-                source_configuration["name"], None
+                source_configuration.get("name", {}), {}
             )
 
             # prepare the parse request

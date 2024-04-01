@@ -30,13 +30,13 @@ pipeline = {
         {
             "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
             "source": {
-                "name": "contents",
-                "type": "contents",
+                "name": "file_url",
+                "type": "file_url",
                 "settings": {},
             },
             "destination": {
                 "collection": "theaters",
-                "field": "embeddings",
+                "field": "file_elements",
                 "embedding": "test_embedding_384",
             },
         }
@@ -46,7 +46,6 @@ pipeline = {
 
 # invoke pipeline
 @router.post("/{pipeline_id}")
-@limiter.limit("1/second")
 @route_exeception_handler
 async def invoke_pipeline(request: Request, pipeline_id: str):
     payload = await request.json()
@@ -59,12 +58,10 @@ async def invoke_pipeline(request: Request, pipeline_id: str):
     if isinstance(payload, str):
         payload = json.loads(payload)
 
-    print(json.dumps(payload, indent=4))
-
     embedding_key = (
         pipeline.get("source_destination_mappings", [{}])[0]
         .get("destination", {})
-        .get("embedding", None)
+        .get("field", None)
     )
 
     if embedding_key in payload.get("fullDocument", {}).keys():
