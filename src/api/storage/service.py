@@ -26,6 +26,7 @@ class StorageHandler:
         # Create a dictionary mapping each storage engine to its corresponding handler, initialized with the connection info
         if isinstance(connection_info, dict):
 
+            # convert the password from a dictionary to bytes so Connection can parse it
             password_dict = connection_info["password"]["$binary"]
             password_bytes = base64.b64decode(password_dict["base64"])
             connection_info["password"] = password_bytes

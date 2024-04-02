@@ -67,10 +67,12 @@ class PipelineProcessor:
         self.index_id = index_id
         self.pipeline = pipeline
         self.task_id = task_id
+
         self.storage_handler = StorageHandler(
             connection_info=self.pipeline["connection"],
             engine=self.pipeline["connection"]["engine"],
         )
+        self.pipeline_tasks = PipelineTaskSyncService(index_id, task_id)
 
     async def connect_to_storage(self):
         await self.storage_handler.connect_to_db()
@@ -84,6 +86,9 @@ class PipelineProcessor:
         # this is where we log the customers db errors
         # await self.storage_client["mixpeek_errors"].insert(response)
         print(f"Insert failed: {response}")
+        self.pipeline_tasks.update_one(
+            {"task_id": self.task_id}, {"status": "FAILURE", "error": response}
+        )
 
     async def insert_into_destination(self, obj, destination):
         try:
