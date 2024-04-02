@@ -23,15 +23,13 @@ class StorageHandler:
     """
 
     def __init__(self, connection_info, engine):
-
-        password_dict = connection_info["password"]["$binary"]
-        password_bytes = base64.b64decode(password_dict["base64"])
-        connection_info["password"] = password_bytes
-
-        self.connection_info = Connection(**connection_info)
-
         # Create a dictionary mapping each storage engine to its corresponding handler, initialized with the connection info
         if isinstance(connection_info, dict):
+
+            password_dict = connection_info["password"]["$binary"]
+            password_bytes = base64.b64decode(password_dict["base64"])
+            connection_info["password"] = password_bytes
+
             self.connection_info = Connection(**connection_info)
         else:
             self.connection_info = connection_info
