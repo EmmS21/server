@@ -63,3 +63,13 @@ class BadRequestError(APIError):
             error=error or {"message": "Bad Request"},
             response=response,
         )
+
+
+class TooManyRequestsError(APIError):
+    def __init__(self, error: Optional[dict] = None, response: Optional[dict] = None):
+        super().__init__(
+            success=False,
+            status=429,
+            error=error or {"message": "Too Many Requests"},
+            response=response,
+        )

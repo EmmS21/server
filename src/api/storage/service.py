@@ -38,14 +38,6 @@ class StorageHandler:
             print(f"Failed to connect to DB: {e}")
             return False
 
-    async def write_to_db(self, data):
-        try:
-            await self.storage_handler.write(data)
-            return True
-        except Exception as e:
-            print(f"Failed to write to DB: {e}")
-            return False
-
     def handle_payload(self, payload):
         try:
             return self.storage_handler.handle_payload(payload)

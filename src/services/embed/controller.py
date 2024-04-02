@@ -10,11 +10,13 @@ from .model import (
 from embed.service import EmbeddingHandler
 
 from _exceptions import BadRequestError, InternalServerError, NotFoundError
+from _utils import check_cpu_usage
 
 router = APIRouter()
 
 
 @router.post("/{modality}", response_model=EmbeddingResponse)
+@check_cpu_usage
 async def embed_input(modality: str, data: EmbeddingRequest):
     embedding_handler = EmbeddingHandler(modality, data.model)
     try:

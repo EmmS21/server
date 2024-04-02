@@ -34,7 +34,7 @@ async def run_workflow(
     parameters: dict = Body(...),
     websocket_id: Optional[str] = None,
 ):
-    
+
     print(request.index_id)
 
     workflow_service = WorkflowSyncService(request.index_id)
@@ -55,5 +55,5 @@ async def run_workflow(
 
 @router.get("/code", response_model=WorkflowResponse)
 @route_exeception_handler
-def convert_code_to_string(code: str = Body(...)):
+async def convert_code_to_string(code: str = Body(...)):
     return create_success_response({"code_as_string": code})

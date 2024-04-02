@@ -9,35 +9,36 @@ from _exceptions import route_exeception_handler
 
 from .service import PipelineAsyncService, process_orchestrator
 from .tasks import process_pipeline
-from .model import PipelineCreateRequest, PipelineResponse
+from .model import PipelineCreateRequest, PipelineResponse, PipelineConnection
 
 router = APIRouter()
 
 # pipelines collection
+# mongodb+srv://sandbox:UT086Nt4m1V2DMRA@sandbox.mhsby.mongodb.net/
 pipeline = {
     "enabled": True,
-    "connection": {
-        "engine": "mongodb",
-        "host": "cluster-sandbox-1.cic7n4w.mongodb.net",
-        "database": "sample_mflix",
-        "username": "enrique",
-        "password": "qeJeqY8FffriLbj1",
-    },
+    # "connection": {
+    #     "engine": "mongodb",
+    #     "host": "sandbox.mhsby.mongodb.net",
+    #     "database": "use_cases",
+    #     "username": "sandbox",
+    #     "password": "UT086Nt4m1V2DMRA",
+    # },
     # "filters": {"status": "processing"},
-    "on_operation": ["insert"],
-    "collection": "documents",
+    # "on_operation": ["insert"],
+    # "collection": "documents",
     "source_destination_mappings": [
         {
             "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
             "source": {
-                "name": "file_url",
+                "name": "resume_url",
                 "type": "file_url",
                 "settings": {},
             },
             "destination": {
-                "collection": "theaters",
-                "field": "file_elements",
-                "embedding": "test_embedding_384",
+                "collection": "resume_embeddings",
+                "field": "text",
+                "embedding": "embedding",
             },
         }
     ],
@@ -58,22 +59,24 @@ async def invoke_pipeline(request: Request, pipeline_id: str):
     if isinstance(payload, str):
         payload = json.loads(payload)
 
-    # this accounts for insertions of embeddings by process_pipeline.
-    # we don't want to re-run process_pipeline.
-    if "file_url" in payload.get("fullDocument", {}) or "contents" in payload.get(
-        "fullDocument", {}
-    ):
-        return {"task_id": task.id}
+    # # this accounts for insertions of embeddings by process_pipeline.
+    # # we don't want to re-run process_pipeline.
+    # if "file_url" in payload.get("fullDocument", {}) or "contents" in payload.get(
+    #     "fullDocument", {}
+    # ):
+    #     return {"task_id": task.id}
 
-    task = process_pipeline.apply_async(
-        kwargs={
-            "index_id": request.index_id,
-            "pipeline": pipeline,
-            "payload": payload,
-        }
-    )
+    # task = process_pipeline.apply_async(
+    #     kwargs={
+    #         "index_id": request.index_id,
+    #         "pipeline": pipeline,
+    #         "payload": payload,
+    #     }
+    # )
 
-    return {"task_id": task.id}
+    await process_pipeline(request.index_id, pipeline_id, pipeline, payload)
+
+    return {"task_id": " task.id"}
 
 
 # create pipeline
@@ -81,11 +84,11 @@ async def invoke_pipeline(request: Request, pipeline_id: str):
 @route_exeception_handler
 async def create_pipeline(
     request: Request,
-    connection_id: str,
+    # connection_info: PipelineConnection,
     pipeline_request: PipelineCreateRequest = Body(...),
 ):
     pipeline_service = PipelineAsyncService(request.index_id)
-    return await pipeline_service.create(pipeline_request, connection_id)
+    return await pipeline_service.create(pipeline_request)
 
 
 @router.get("/status/{task_id}")

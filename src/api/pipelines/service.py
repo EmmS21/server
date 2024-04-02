@@ -33,12 +33,18 @@ class PipelineAsyncService(BaseAsyncDBService):
     def __init__(self, index_id):
         super().__init__("pipelines", index_id)
 
-    async def create(self, connection_id, pipeline_request):
-        # # grab connection_id from the pipeline_request
-        # organization_service = OrganizationSyncService()
-        # organization = organization_service.get_organization(self.index_id)
+    async def create(self, pipeline_request):
+        # grab connection_id from the pipeline_request
+        user_service = UserService()
+        user = user_service.get_user_by_index_id(self.index_id)
 
-        # connection_information = organization.get("connections", None)
+        # connection_information = user.get("connections", None)
+        # if not connection_information:
+        #     raise NotFoundError("Connection information found")
+
+        print(type(user))
+
+        # connection_information = user.get("connections", None)
         # if not connection_information:
         #     raise NotFoundError("Connection information found")
 
@@ -53,7 +59,8 @@ class PipelineAsyncService(BaseAsyncDBService):
 
         # print(new_pipeline.model_dump())
 
-        return self.create_one("obj")
+        # return self.create_one("obj")
+        return "ok"
 
 
 class PipelineProcessor:
@@ -74,22 +81,24 @@ class PipelineProcessor:
             print("Connected to the database")
 
     def log_error_in_tasks_db(self, response):
-        print(response)
+        # this is where we log the customers db errors
+        # await self.storage_client["mixpeek_errors"].insert(response)
+        print(f"Insert failed: {response}")
 
     async def insert_into_destination(self, obj, destination):
         try:
             collection = self.storage_client[destination["collection"]]
+            print("inserting into collection")
             await collection.insert_one(obj)
 
         except Exception as e:
-            print(f"Insert failed: {e}")
-            await self.log_error_in_tasks_db(
-                    {
-                        "task_id": self.task_id,
-                        "object": obj,
-                        "error": e,
-                    }
-                )
+            self.log_error_in_tasks_db(
+                {
+                    "task_id": self.task_id,
+                    # "object": obj,
+                    "error": str(e),
+                }
+            )
 
     async def parse_file(self, parser_request):
         parse_handler = ParseHandler()
@@ -99,6 +108,7 @@ class PipelineProcessor:
         return json.loads(parse_response.body.decode())
 
     async def process_chunks(self, embedding_model, chunks, destination):
+        # TODO: add support for other modalities
         embed_handler = EmbeddingHandler(modality="text", model=embedding_model)
         for chunk in chunks:
             embedding_response = await embed_handler.encode({"input": chunk["text"]})
@@ -118,11 +128,9 @@ class PipelineProcessor:
 
             embedding = embedding_response_content["response"]["embedding"]
             obj = {
-                destination["field"]: {
-                    "text": chunk["text"],
-                    "metadata": chunk["metadata"],
-                },
+                destination["field"]: chunk["text"],
                 destination["embedding"]: embedding,
+                "metadata": chunk["metadata"],
             }
             await self.insert_into_destination(obj, destination)
 

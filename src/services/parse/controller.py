@@ -3,12 +3,14 @@ from fastapi import APIRouter
 from .model import ParseFileRequest
 from .service import ParseHandler
 from _exceptions import route_exeception_handler
+from _utils import check_cpu_usage
 
 
 router = APIRouter()
 
 
 @router.post("/{modality}")
+@check_cpu_usage
 @route_exeception_handler
 async def parse_file(
     modality: str,

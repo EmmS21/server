@@ -1,8 +1,12 @@
-from .model import User, UserRequest
+from .model import User, UserRequest, Connection, UpdateUserRequest
+
 from _exceptions import BadRequestError, NotFoundError
-from utilities.methods import create_success_response
 from db.service import sync_db
+
+from utilities.methods import create_success_response
 from utilities.helpers import generate_uuid
+from utilities.encryption import SecretCipher
+
 from pymongo import ReturnDocument
 
 
@@ -19,12 +23,8 @@ class UserService:
         if self.collection.find_one({"email": user.email}):
             raise BadRequestError("User already exists")
 
-        user_data = User(
-            email=user.email,
-            metadata=user.metadata,
-        )
+        user_data = User(email=user.email, metadata=user.metadata)
         user_data_json = user_data.model_dump()
-
         try:
             self.collection.insert_one(user_data_json.copy())
             return create_success_response(user_data_json)
@@ -38,14 +38,22 @@ class UserService:
         user_data = self.collection.find_one({"index_ids": index_id})
         if not user_data:
             raise NotFoundError("User not found")
+
         return User(**user_data)
 
     def update_user(self, index_id, updated_data):
         filters = {"index_ids": index_id}
 
+        try:
+            validated_data = UpdateUserRequest(**updated_data).model_dump(
+                exclude_unset=True
+            )
+        except Exception as e:
+            raise BadRequestError(str(e))
+
         user_data = self.collection.find_one_and_update(
             filters,
-            {"$set": updated_data},
+            {"$set": validated_data},
             return_document=ReturnDocument.AFTER,
         )
         if not user_data:

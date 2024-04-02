@@ -12,9 +12,10 @@ from config import mixpeek_admin_token
 router = APIRouter()
 
 
-@router.post("/", response_model=User, include_in_schema=False)
+# private
+@router.post("/private", response_model=User, include_in_schema=False)
 @route_exeception_handler
-async def create_user(user: UserRequest, Authorization: str = Header(None)):
+async def create_user_private(user: UserRequest, Authorization: str = Header(None)):
     if Authorization != mixpeek_admin_token:
         raise NotFoundError("Invalid admin token")
 
@@ -22,14 +23,12 @@ async def create_user(user: UserRequest, Authorization: str = Header(None)):
     return user_service.create_user(user)
 
 
-@router.get("/", response_model=User, include_in_schema=False)
+# public
+@router.get("/", response_model=User)
 @route_exeception_handler
-async def get_user(user: UserRequest, Authorization: str = Header(None)):
-    if Authorization != mixpeek_admin_token:
-        raise NotFoundError("Invalid admin token")
-
+async def get_user(index_id: str = Depends(get_index_id)):
     user_service = UserService()
-    return user_service.get_user_by_email(user)
+    return user_service.get_user_by_index_id(index_id)
 
 
 @router.put("/", response_model=User)

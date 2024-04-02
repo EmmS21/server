@@ -34,15 +34,14 @@ class MongoDBHandler:
             print("Connection Failure:", e)
 
     def handle_payload(self, payload):
-        operation_type = payload.get("operationType")
+        # TODO handle for diff db operations
+        return payload
+        # operation_type = payload.get("operationType")
 
-        if operation_type == "insert":
-            return payload.get("fullDocument")
-        else:
-            raise NotFoundError("Operation type not found for MongoDB payload.")
-
-    async def insert(self, data):
-        await self.collection.insert_one(data)
+        # if operation_type == "insert":
+        #     return payload.get("fullDocument")
+        # else:
+        #     raise NotFoundError("Operation type not found for MongoDB payload.")
 
     async def delete(self, parent_id):
         await self.collection.delete_many({"parent_id": parent_id})

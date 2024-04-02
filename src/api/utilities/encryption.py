@@ -34,8 +34,8 @@ class SecretCipher:
         """Check if a string is encrypted."""
         try:
             # Try to decrypt the string
-            self.decrypt_string(s)
+            self.decrypt_string(s.encode())
             return True
-        except InvalidToken:
-            # If decryption raises an InvalidToken exception, the string is not encrypted
+        except (InvalidToken, TypeError):
+            # If decryption raises an InvalidToken or TypeError exception, the string is not encrypted
             return False

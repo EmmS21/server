@@ -11,39 +11,34 @@ from users.model import Connection
 
 # Enumerations
 class FieldType(str, Enum):
-    url = "url"
-    inline = "inline"
+    file_url = "file_url"
+    contents = "contents"
 
 
-class FieldSchema(BaseModel):
-    name: str
+class Source(BaseModel):
+    field: str
     type: FieldType
-    embedding_model: Optional[str] = "sentence-transformers/all-MiniLM-L6-v2"
-    settings: Optional[dict] = {}
+    settings: dict
 
 
-class SourceSchema(BaseModel):
-    filters: dict
-    on_operation: List[str]
-    field: FieldSchema
-
-
-class DestinationSchema(BaseModel):
+class Destination(BaseModel):
     collection: str
-    new_field_name: str
-    new_embeddings: str
+    field: str
+    embedding: str
 
 
-# Pipeline schema definition
-class PipelineSchema(BaseModel):
-    index_id: str
-    created_at: datetime
-    last_run: Optional[datetime]
+class SourceDestinationMapping(BaseModel):
+    embedding_model: str
+    source: Source
+    destination: Destination
+
+
+class Pipeline(BaseModel):
     pipeline_id: str
     enabled: bool
-    connection: Connection
-    source: SourceSchema
-    destination: DestinationSchema
+    connection: Optional[Connection]
+    source_destination_mappings: List[SourceDestinationMapping]
+    metadata: Optional[dict]
 
 
 # requests
@@ -53,23 +48,29 @@ class PipelineSchema(BaseModel):
 # Pipeline schema definition
 class PipelineCreateRequest(BaseModel):
     pipeline_id: str = Field(default_factory=lambda: generate_uuid(6, False))
-    connection: Optional[Connection]
-    source: SourceSchema
-    destination: DestinationSchema
+    enabled: Optional[bool] = True
+    source_destination_mappings: List[SourceDestinationMapping]
     metadata: Optional[dict] = {}
-    enabled: bool = False
     last_run: Optional[datetime] = None
+
+
+class PipelineConnection(Connection):
+    pass
 
 
 """responses"""
 
 
-class PipelineResponse(BaseModel):
-    pipeline_id: str
-    created_at: datetime
-    last_run: Optional[datetime]
-    enabled: bool
-    connection: Connection
-    source: SourceSchema
-    destination: DestinationSchema
-    metadata: Optional[dict] = {}
+class PipelineResponse(Pipeline):
+    pass
+
+
+# class PipelineResponse(BaseModel):
+#     pipeline_id: str
+#     created_at: datetime
+#     last_run: Optional[datetime]
+#     enabled: bool
+#     connection: Connection
+#     source: SourceSchema
+#     destination: DestinationSchema
+#     metadata: Optional[dict] = {}
