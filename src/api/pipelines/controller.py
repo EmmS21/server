@@ -5,7 +5,7 @@ import json
 from rate_limiter import limiter
 
 from utilities.methods import create_success_response
-from _exceptions import route_exeception_handler
+from _exceptions import route_exception_handler, NotFoundError
 
 from .service import PipelineAsyncService, process_orchestrator
 from .tasks import process_pipeline
@@ -47,41 +47,32 @@ pipeline = {
 
 # invoke pipeline
 @router.post("/{pipeline_id}")
-@route_exeception_handler
+@route_exception_handler
 async def invoke_pipeline(request: Request, pipeline_id: str):
     payload = await request.json()
     pipeline_service = PipelineAsyncService(request.index_id)
-    # pipeline = await pipeline_service.get_one({"pipeline_id": pipeline_id})
+    pipeline = await pipeline_service.get_one({"pipeline_id": pipeline_id})
 
-    # if not pipeline:
-    #     raise NotFoundError("Pipeline not found.")
+    if not pipeline:
+        raise NotFoundError("Pipeline not found.")
 
     if isinstance(payload, str):
         payload = json.loads(payload)
 
-    # # this accounts for insertions of embeddings by process_pipeline.
-    # # we don't want to re-run process_pipeline.
-    # if "file_url" in payload.get("fullDocument", {}) or "contents" in payload.get(
-    #     "fullDocument", {}
-    # ):
-    #     return {"task_id": task.id}
+    task = process_pipeline.apply_async(
+        kwargs={
+            "index_id": request.index_id,
+            "pipeline": pipeline,
+            "payload": payload,
+        }
+    )
 
-    # task = process_pipeline.apply_async(
-    #     kwargs={
-    #         "index_id": request.index_id,
-    #         "pipeline": pipeline,
-    #         "payload": payload,
-    #     }
-    # )
-
-    await process_pipeline(request.index_id, pipeline_id, pipeline, payload)
-
-    return {"task_id": " task.id"}
+    return {"task_id": task.id}
 
 
 # create pipeline
-@router.post("/", response_model=PipelineResponse)
-@route_exeception_handler
+@router.post("/")
+@route_exception_handler
 async def create_pipeline(
     request: Request,
     # connection_info: PipelineConnection,
@@ -92,7 +83,7 @@ async def create_pipeline(
 
 
 @router.get("/status/{task_id}")
-@route_exeception_handler
+@route_exception_handler
 def task_status(request: Request, task_id: str):
     """Query tasks status."""
     task = process_pipeline.AsyncResult(task_id)
@@ -120,13 +111,13 @@ def task_status(request: Request, task_id: str):
 
 # # list pipelines
 # @router.get("/")
-# @route_exeception_handler
+# @route_exception_handler
 # async def list_pipelines(request: Request):
 #     return create_success_response({"message": "Pipelines listed."})
 
 
 # # modify pipeline
 # @router.put("/{pipeline_id}")
-# @route_exeception_handler
+# @route_exception_handler
 # async def modify_pipeline(request: Request):
 #     return create_success_response({"message": "Pipeline modified."})

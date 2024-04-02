@@ -5,7 +5,7 @@ import sys
 from logger import log
 
 
-def route_exeception_handler(func):
+def route_exception_handler(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -16,6 +16,8 @@ def route_exeception_handler(func):
             raise NotFoundError(error=e.error)
         except InternalServerError as e:
             raise InternalServerError(error=e.error)
+        # except StorageConnectionError as e:
+        #     raise StorageConnectionError(error=e.error)
 
     return wrapper
 
@@ -66,6 +68,16 @@ class BadRequestError(APIError):
         )
 
 
+class StorageConnectionError(APIError):
+    def __init__(self, error: Optional[dict] = None, response: Optional[dict] = None):
+        super().__init__(
+            success=False,
+            status=503,
+            error=error or {"message": "Cannot connect to the storage"},
+            response=response,
+        )
+
+
 class UnsupportedModelProviderError(Exception):
     """Exception raised for unsupported model provider."""
 
@@ -97,9 +109,3 @@ class ModelResponseFormatValidationError(Exception):
         self.error = error
         self.suggestion = suggestion
         super().__init__(f"{self.error} Suggestion: {self.suggestion}")
-
-
-class StorageConnectionError(Exception):
-    """Exception raised for errors during storage connection."""
-
-    pass

@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
-from utilities.helpers import unique_name, generate_uuid
+from utilities.helpers import unique_name, generate_uuid, current_time
 from utilities.encryption import SecretCipher
 
 from users.model import Connection
@@ -34,11 +34,16 @@ class SourceDestinationMapping(BaseModel):
 
 
 class Pipeline(BaseModel):
-    pipeline_id: str
-    enabled: bool
+    pipeline_id: str = Field(default_factory=lambda: generate_uuid(6, False))
+    enabled: bool = False
+
     connection: Optional[Connection]
     source_destination_mappings: List[SourceDestinationMapping]
     metadata: Optional[dict]
+
+    # internal keys
+    created_at: datetime = Field(default_factory=lambda: current_time())
+    last_run: Optional[datetime] = Field(None)
 
 
 # requests
@@ -47,11 +52,8 @@ class Pipeline(BaseModel):
 
 # Pipeline schema definition
 class PipelineCreateRequest(BaseModel):
-    pipeline_id: str = Field(default_factory=lambda: generate_uuid(6, False))
-    enabled: Optional[bool] = True
     source_destination_mappings: List[SourceDestinationMapping]
     metadata: Optional[dict] = {}
-    last_run: Optional[datetime] = None
 
 
 class PipelineConnection(Connection):

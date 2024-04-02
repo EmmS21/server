@@ -44,6 +44,8 @@ class JSONEncoder(json.JSONEncoder):
             return str(o)
         if isinstance(o, bytes):
             return o.decode("utf-8")
+        if isinstance(o, datetime):
+            return o.isoformat()
         return json.JSONEncoder.default(self, o)
 
 

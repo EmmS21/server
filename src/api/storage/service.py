@@ -1,4 +1,5 @@
 from pydantic import ValidationError
+import base64
 
 
 # from .plugins.qdrant import QdrantHandler
@@ -10,7 +11,10 @@ from pydantic import ValidationError
 from .plugins.mongodb import MongoDBHandler
 
 
-from _exceptions import StorageConnectionError
+from users.model import Connection
+
+
+from _exceptions import BadRequestError
 
 
 class StorageHandler:
@@ -19,7 +23,20 @@ class StorageHandler:
     """
 
     def __init__(self, connection_info, engine):
-        self.connection_info = connection_info
+
+        password_dict = connection_info["password"]["$binary"]
+        password_bytes = base64.b64decode(password_dict["base64"])
+        connection_info["password"] = password_bytes
+
+        self.connection_info = Connection(**connection_info)
+
+        # Create a dictionary mapping each storage engine to its corresponding handler, initialized with the connection info
+        if isinstance(connection_info, dict):
+            self.connection_info = Connection(**connection_info)
+        else:
+            self.connection_info = connection_info
+
+        self.client = None
         self.storage_handlers = {
             "mongodb": MongoDBHandler(self.connection_info),
         }
@@ -27,19 +44,19 @@ class StorageHandler:
         try:
             self.storage_handler = self.storage_handlers[engine]
         except ValidationError as e:
-            raise StorageConnectionError(f"Invalid connection info: {e}")
+            raise BadRequestError(f"Invalid connection info: {e}")
         except KeyError:
-            raise StorageConnectionError(f"Unsupported storage handler: {engine}")
+            raise BadRequestError(f"Unsupported storage handler: {engine}")
 
     async def connect_to_db(self):
         try:
-            return await self.storage_handler.connect()
+            # now we have a self.db attribute that we can use to interact with the database
+            self.client = await self.storage_handler.connect()
         except Exception as e:
-            print(f"Failed to connect to DB: {e}")
-            return False
+            raise BadRequestError(f"Failed to connect to the database: {e}")
 
     def handle_payload(self, payload):
         try:
             return self.storage_handler.handle_payload(payload)
         except Exception as e:
-            print(f"Failed to handle payload: {e}")
+            raise BadRequestError(f"Failed to handle payload: {e}")

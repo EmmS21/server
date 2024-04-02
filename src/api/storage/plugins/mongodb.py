@@ -2,9 +2,9 @@ from pydantic import BaseModel
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
-from _exceptions import NotFoundError
+from _exceptions import StorageConnectionError
+from utilities.helpers import generate_uuid
 
-from users.model import Connection
 
 # changes
 # insert
@@ -21,20 +21,24 @@ from users.model import Connection
 
 class MongoDBHandler:
     def __init__(self, connection_info):
-        self.connection_info = Connection(**connection_info)
+        self.connection_info = connection_info
         self.client = None
 
     async def connect(self):
         try:
-            connection_string = f"mongodb+srv://{self.connection_info.username}:{self.connection_info.password}@{self.connection_info.host}"
+            password_string = self.connection_info.get_decrypted_password()
+            connection_string = f"mongodb+srv://{self.connection_info.username}:{password_string}@{self.connection_info.host}"
             self.client = AsyncIOMotorClient(connection_string)
             self.db = self.client[self.connection_info.database]
             return self.db
         except Exception as e:
-            print("Connection Failure:", e)
+            raise StorageConnectionError(f"Failed to connect to the database: {e}")
 
     def handle_payload(self, payload):
         # TODO handle for diff db operations
+        # let's use the _id as the parent_id for the entire payload
+        parent_id = payload.get("_id", generate_uuid())
+        payload["parent_id"] = parent_id
         return payload
         # operation_type = payload.get("operationType")
 

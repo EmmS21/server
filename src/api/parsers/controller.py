@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from _exceptions import route_exeception_handler
+from _exceptions import route_exception_handler
 
 from .model import ParseFileRequest
 from .service import ParseHandler
@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.post("/")
-@route_exeception_handler
+@route_exception_handler
 async def parse_file(
     parser_request: ParseFileRequest,
 ):

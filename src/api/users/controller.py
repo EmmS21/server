@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Optional, Union, cast
 
 from auth.service import get_index_id
-from _exceptions import NotFoundError, route_exeception_handler
+from _exceptions import NotFoundError, route_exception_handler
 
 from .model import User, UserRequest, UpdateUserRequest
 from .service import UserService
@@ -14,7 +14,7 @@ router = APIRouter()
 
 # private
 @router.post("/private", response_model=User, include_in_schema=False)
-@route_exeception_handler
+@route_exception_handler
 async def create_user_private(user: UserRequest, Authorization: str = Header(None)):
     if Authorization != mixpeek_admin_token:
         raise NotFoundError("Invalid admin token")
@@ -25,14 +25,14 @@ async def create_user_private(user: UserRequest, Authorization: str = Header(Non
 
 # public
 @router.get("/", response_model=User)
-@route_exeception_handler
+@route_exception_handler
 async def get_user(index_id: str = Depends(get_index_id)):
     user_service = UserService()
     return user_service.get_user_by_index_id(index_id)
 
 
 @router.put("/", response_model=User)
-@route_exeception_handler
+@route_exception_handler
 async def update_user(update: UpdateUserRequest, index_id: str = Depends(get_index_id)):
     user_service = UserService()
     return user_service.update_user(index_id, update.model_dump(exclude_unset=True))

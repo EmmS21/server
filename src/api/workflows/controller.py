@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, Depends, Request
 from typing import List, Optional
 
-from _exceptions import route_exeception_handler
+from _exceptions import route_exception_handler
 
 
 from utilities.helpers import generate_uuid, current_time
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.post("/", response_model=WorkflowResponse)
-@route_exeception_handler
+@route_exception_handler
 async def create_workflow(
     request: Request, workflow_request: WorkflowCreateRequest = Body(...)
 ):
@@ -27,7 +27,7 @@ async def create_workflow(
 
 
 @router.post("/{workflow_id}/invoke")
-@route_exeception_handler
+@route_exception_handler
 async def run_workflow(
     request: Request,
     workflow_id: str,
@@ -54,6 +54,6 @@ async def run_workflow(
 
 
 @router.get("/code", response_model=WorkflowResponse)
-@route_exeception_handler
+@route_exception_handler
 async def convert_code_to_string(code: str = Body(...)):
     return create_success_response({"code_as_string": code})
