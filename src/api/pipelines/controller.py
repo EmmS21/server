@@ -5,7 +5,7 @@ import json
 from rate_limiter import limiter
 
 from utilities.methods import create_success_response
-from _exceptions import route_exeception_handler, DuplicateError
+from _exceptions import route_exeception_handler
 
 from .service import PipelineAsyncService, process_orchestrator
 from .tasks import process_pipeline

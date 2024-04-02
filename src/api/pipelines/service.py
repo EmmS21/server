@@ -79,12 +79,17 @@ class PipelineProcessor:
     async def insert_into_destination(self, obj, destination):
         try:
             collection = self.storage_client[destination["collection"]]
-
-            # Perform the update operation with upsert=True to insert if the document does not exist.
-            result = await collection.insert_one(obj)
+            await collection.insert_one(obj)
 
         except Exception as e:
-            print(f"🚨 insert failed: {e}")
+            print(f"Insert failed: {e}")
+            await self.log_error_in_tasks_db(
+                    {
+                        "task_id": self.task_id,
+                        "object": obj,
+                        "error": e,
+                    }
+                )
 
     async def parse_file(self, parser_request):
         parse_handler = ParseHandler()

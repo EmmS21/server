@@ -14,8 +14,6 @@ def route_exeception_handler(func):
             raise BadRequestError(error=e.error)
         except NotFoundError as e:
             raise NotFoundError(error=e.error)
-        except DuplicateError as e:
-            raise DuplicateError(error=e.error)
         except InternalServerError as e:
             raise InternalServerError(error=e.error)
 
@@ -64,16 +62,6 @@ class BadRequestError(APIError):
             success=False,
             status=400,
             error=error or {"message": "Bad Request"},
-            response=response,
-        )
-
-
-class DuplicateError(APIError):
-    def __init__(self, error: Optional[dict] = None, response: Optional[dict] = None):
-        super().__init__(
-            success=False,
-            status=409,
-            error=error or {"message": "Duplicate Entry"},
             response=response,
         )
 
