@@ -2,7 +2,7 @@
   <img height="60" src="https://mixpeek.com/static/img/logo-dark.png" alt="Mixpeek Logo">
 </p>
 <p align="center">
-<strong><a href="https://mixpeek.com/start">Sign Up</a> | <a href="https://docs.mixpeek.com/">Documentation</a> | <a href="https://mixpeek.com/start">Email List</a> | <a href="https://join.slack.com/t/mixpeek/shared_invite/zt-2edc3l6t2-H8VxHFAIl0cnpqDmyFGt0A">Slack</a>
+<strong><a href="https://mixpeek.com/start">Sign Up</a> | <a href="https://docs.mixpeek.com/">Documentation</a> | <a href="https://learn.mixpeek.com">Email List</a> | <a href="https://join.slack.com/t/mixpeek/shared_invite/zt-2edc3l6t2-H8VxHFAIl0cnpqDmyFGt0A">Slack</a>
 </strong>
 </p>
 
