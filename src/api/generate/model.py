@@ -1,11 +1,17 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List, Optional, Dict
+from enum import Enum
+
+
+class Models(str, Enum):
+    gpt_3_5_turbo = "gpt-3.5-turbo"
+    gpt_4_turbo_preview = "gpt-4-turbo-preview"
 
 
 class Model(BaseModel):
     provider: str = Field(...)
-    model: str = Field(...)
+    model: Models = Field(...)
 
 
 class Message(BaseModel):
