@@ -58,14 +58,12 @@ async def invoke_pipeline(request: Request, pipeline_id: str):
     if isinstance(payload, str):
         payload = json.loads(payload)
 
-    embedding_key = (
-        pipeline.get("source_destination_mappings", [{}])[0]
-        .get("destination", {})
-        .get("field", None)
-    )
-
-    if embedding_key in payload.get("fullDocument", {}).keys():
-        raise DuplicateError()
+    # this accounts for insertions of embeddings by process_pipeline.
+    # we don't want to re-run process_pipeline.
+    if "file_url" in payload.get("fullDocument", {}) or "contents" in payload.get(
+        "fullDocument", {}
+    ):
+        return {"task_id": task.id}
 
     task = process_pipeline.apply_async(
         kwargs={
