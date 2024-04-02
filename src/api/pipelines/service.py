@@ -1,6 +1,8 @@
 import json
 from db.service import BaseAsyncDBService, BaseSyncDBService
 from _exceptions import BadRequestError, NotFoundError
+from bson import ObjectId
+
 
 from users.service import UserService
 
@@ -66,7 +68,7 @@ class PipelineProcessor:
 
     async def connect_to_db(self):
         self.storage_client = await self.storage_handler.connect_to_db()
-        if not self.storage_client:
+        if self.storage_client is None:
             raise BadRequestError("Failed to connect to the database")
         else:
             print("Connected to the database")
@@ -74,8 +76,20 @@ class PipelineProcessor:
     def log_error_in_tasks_db(self, response):
         print(response)
 
-    def insert_into_destination(self, obj, destination):
-        print(f"Inserted into {obj} into {destination}")
+    async def insert_into_destination(self, obj, destination):
+        try:
+            collection = self.storage_client[destination["collection"]]
+            await collection.insert_one(obj)
+
+        except Exception as e:
+            print(f"Insert failed: {e}")
+            await self.log_error_in_tasks_db(
+                    {
+                        "task_id": self.task_id,
+                        "object": obj,
+                        "error": e,
+                    }
+                )
 
     async def parse_file(self, parser_request):
         parse_handler = ParseHandler()
@@ -104,17 +118,17 @@ class PipelineProcessor:
 
             embedding = embedding_response_content["response"]["embedding"]
             obj = {
-                "text": chunk["text"],
-                "metadata": chunk["metadata"],
+                destination["field"]: {
+                    "text": chunk["text"],
+                    "metadata": chunk["metadata"],
+                },
                 destination["embedding"]: embedding,
-                "foreign_key": "123",  # this should be a foreign key from the source payload
-                # "contents": None,
             }
-            self.insert_into_destination(obj, destination)
+            await self.insert_into_destination(obj, destination)
 
     async def process(self, payload):
         # connect to the db
-        # await self.connect_to_db()
+        await self.connect_to_db()
 
         # normalize the client supplied payload to a common format
         prepared_payload = self.storage_handler.handle_payload(payload)
@@ -127,7 +141,7 @@ class PipelineProcessor:
 
             # grab the pipeline source value from the client supplied payload
             client_payload_value = prepared_payload.get(
-                source_configuration["name"], None
+                source_configuration.get("name", {}), {}
             )
 
             # prepare the parse request
@@ -152,6 +166,6 @@ class PipelineProcessor:
 
             await self.process_chunks(
                 embedding_model=source_destination_mapping["embedding_model"],
-                chunks=parse_response_content["response"]["text"],
+                chunks=parse_response_content["response"]["output"],
                 destination=source_destination_mapping["destination"],
             )

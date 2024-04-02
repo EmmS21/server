@@ -62,7 +62,7 @@ async def _send_post_request(url, data, timeout=None):
                 f"Internal request failed with status {response.status_code}"
             )
         response_as_json = response.json()["response"]
-        response_as_json["metadata"]["elapsed_time"] = time.time() * 1000 - start_time
+        # response_as_json["metadata"]["elapsed_time"] = time.time() * 1000 - start_time
 
         return response_as_json
 

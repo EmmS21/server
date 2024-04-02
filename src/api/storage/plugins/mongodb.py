@@ -25,11 +25,13 @@ class MongoDBHandler:
         self.client = None
 
     async def connect(self):
-        connection_string = f"mongodb://{self.connection_info.username}:{self.connection_info.password}@{self.connection_info.host}:{self.connection_info.port}"
-        self.client = AsyncIOMotorClient(connection_string)
-        self.db = self.client[self.connection_info.database]
-        return await self.db
-        # self.collection = self.db[self.connection_info.collection]
+        try:
+            connection_string = f"mongodb+srv://{self.connection_info.username}:{self.connection_info.password}@{self.connection_info.host}"
+            self.client = AsyncIOMotorClient(connection_string)
+            self.db = self.client[self.connection_info.database]
+            return self.db
+        except Exception as e:
+            print("Connection Failure:", e)
 
     def handle_payload(self, payload):
         operation_type = payload.get("operationType")

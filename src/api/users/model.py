@@ -42,7 +42,7 @@ class Connection(BaseModel):
     port: Optional[int] = None
     database: str
     username: str
-    password: bytes
+    password: str
     extra_params: Optional[dict] = None
     # connection_id: str = Field(
     #     default_factory=lambda: "conn-" + generate_uuid(length=6, dashes=False)

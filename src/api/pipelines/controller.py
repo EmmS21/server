@@ -5,7 +5,7 @@ import json
 from rate_limiter import limiter
 
 from utilities.methods import create_success_response
-from _exceptions import route_exeception_handler, NotFoundError
+from _exceptions import route_exeception_handler
 
 from .service import PipelineAsyncService, process_orchestrator
 from .tasks import process_pipeline
@@ -18,48 +18,34 @@ pipeline = {
     "enabled": True,
     "connection": {
         "engine": "mongodb",
-        "host": "sandbox.mhsby.mongodb.net",
-        "database": "use_cases",
-        "username": "sandbox",
-        "password": "UT086Nt4m1V2DMRA",
+        "host": "cluster-sandbox-1.cic7n4w.mongodb.net",
+        "database": "sample_mflix",
+        "username": "enrique",
+        "password": "qeJeqY8FffriLbj1",
     },
     # "filters": {"status": "processing"},
-    # "on_operation": ["insert"],
+    "on_operation": ["insert"],
     "collection": "documents",
-    "source_destination_mappings": [  # everything inside here gets processed together
+    "source_destination_mappings": [
         {
             "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
             "source": {
-                "name": "my_file_url",  # field name
-                "type": "file_url",  # file_url, contents
+                "name": "file_url",
+                "type": "file_url",
                 "settings": {},
             },
             "destination": {
-                "collection": "documents_elements",
+                "collection": "theaters",
                 "field": "file_elements",
-                "embedding": "file_embeddings",
+                "embedding": "test_embedding_384",
             },
         }
     ],
 }
 
-payload = {
-    "_id": {"_data": "..."},
-    "operationType": "insert",
-    "clusterTime": {"$timestamp": {"t": 1711225660, "i": 1}},
-    "wallTime": "2024-03-23T20:27:40.270Z",
-    "fullDocument": {
-        "_id": "65ff3b3ac3dfd5ef4fb1d2f7",
-        "my_file_url": "https://nux-sandbox.s3.us-east-2.amazonaws.com/marketing/ethan-resume.pdf",
-    },
-    "ns": {"db": "use_cases", "coll": "legal_cases"},
-    "documentKey": {"_id": "65ff3b3ac3dfd5ef4fb1d2f7"},
-}
-
 
 # invoke pipeline
 @router.post("/{pipeline_id}")
-@limiter.limit("1/second")
 @route_exeception_handler
 async def invoke_pipeline(request: Request, pipeline_id: str):
     payload = await request.json()
@@ -69,9 +55,15 @@ async def invoke_pipeline(request: Request, pipeline_id: str):
     # if not pipeline:
     #     raise NotFoundError("Pipeline not found.")
 
-    # Check if payload is a string before trying to parse it as JSON
     if isinstance(payload, str):
         payload = json.loads(payload)
+
+    # this accounts for insertions of embeddings by process_pipeline.
+    # we don't want to re-run process_pipeline.
+    if "file_url" in payload.get("fullDocument", {}) or "contents" in payload.get(
+        "fullDocument", {}
+    ):
+        return {"task_id": task.id}
 
     task = process_pipeline.apply_async(
         kwargs={
