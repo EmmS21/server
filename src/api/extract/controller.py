@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.post("/")
 @route_exception_handler
-async def parse_file(
+async def extract_file(
     parser_request: ParseFileRequest,
 ):
     parse_handler = ParseHandler()

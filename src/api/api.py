@@ -11,7 +11,7 @@ from auth.service import get_index_id
 
 # Local application/library specific imports
 from users.controller import router as user_router
-from parsers.controller import router as parsers_router
+from extract.controller import router as extract_router
 from workflows.controller import router as workflow_router
 from generate.controller import router as generate_router
 from embed.controller import router as embed_router
@@ -46,11 +46,12 @@ api_router.include_router(user_router, prefix="/users", tags=["Users"])
 
 # authenticated
 # fmt: off
+api_router.include_router(extract_router, prefix="/extract", tags=["Extract"], dependencies=[Depends(get_index_id)])
+api_router.include_router(generate_router, prefix="/generate", tags=["Generate"], dependencies=[Depends(get_index_id)])
+api_router.include_router(embed_router, prefix="/embed", tags=["Embed"], dependencies=[Depends(get_index_id)])
+
 api_router.include_router(pipeline_router, prefix="/pipelines", tags=["Pipelines"], dependencies=[Depends(get_index_id)])
-api_router.include_router(parsers_router, prefix="/parsers", tags=["Parsers"], dependencies=[Depends(get_index_id)])
 api_router.include_router(workflow_router, prefix="/workflows", tags=["Workflows"], dependencies=[Depends(get_index_id)])
-api_router.include_router(generate_router, prefix="/generate", tags=["Generaters"], dependencies=[Depends(get_index_id)])
-api_router.include_router(embed_router, prefix="/embed", tags=["Embedders"], dependencies=[Depends(get_index_id)])
 api_router.include_router(storage_router, prefix="/storage", tags=["Storage"], dependencies=[Depends(get_index_id)])
 
 

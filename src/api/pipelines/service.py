@@ -8,8 +8,8 @@ from users.service import UserService
 
 from .model import Pipeline, SourceDestinationMapping
 
-from parsers.service import ParseHandler
-from parsers.model import ParseFileRequest
+from extract.service import ParseHandler
+from extract.model import ParseFileRequest
 
 from embed.service import EmbeddingHandler
 from storage.service import StorageHandler
