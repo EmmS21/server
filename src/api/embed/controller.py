@@ -15,14 +15,14 @@ from .service import EmbeddingHandler
 router = APIRouter()
 
 
-@router.get("/config", response_model=ConfigsResponse)
+@router.post("/config", response_model=ConfigsResponse)
 @route_exception_handler
 async def get_dimensions(data: ConfigsRequest):
     embedding_handler = EmbeddingHandler(data.modality, data.model)
     return await embedding_handler.get_configs()
 
 
-@router.get("/", response_model=EmbeddingResponse)
+@router.post("/", response_model=EmbeddingResponse)
 @route_exception_handler
 async def embed_input(data: EmbeddingRequest):
     embedding_handler = EmbeddingHandler(data.modality, data.model)
