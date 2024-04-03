@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, root_validator
 from typing import Optional
 from _exceptions import BadRequestError
 
-
+# fmt: off
 class PartitionStrategy:
     AUTO = "auto"
     FAST = "fast"
@@ -88,7 +88,7 @@ class VideoParams(BaseModel):
     pass
 
 
-class ParseFileRequest(BaseModel):
+class ExtractRequest(BaseModel):
     # Common Settings across Parsers
     file_url: Optional[str] = Field(
         default=None,
@@ -98,13 +98,14 @@ class ParseFileRequest(BaseModel):
         default=None,
         description="Either 'file_url' or 'contents' must be provided, but not both.",
     )
-    should_chunk: Optional[bool] = True
-    clean_text: Optional[bool] = True
-    max_characters_per_chunk: Optional[int] = None
+    
+    should_chunk: Optional[bool] = Field(True, description="Indicates if the text should be divided into chunks.")
+    clean_text: Optional[bool] = Field(True, description="Indicates if the text should be cleaned.")
+    max_characters_per_chunk: Optional[int] = Field(None, description="The maximum number of characters per chunk. None means no limit.")
 
     # Common Settings across Parsers
-    extract_tags: Optional[bool] = False
-    summarize: Optional[bool] = False
+    extract_tags: Optional[bool] = Field(False, description="Indicates if tags should be extracted from the text.")
+    summarize: Optional[bool] = Field(False, description="Indicates if the text should be summarized.")
 
     # Parser Specific Settings for text/unstructured
     pdf_settings: Optional[PDFParams] = PDFParams()
@@ -138,3 +139,8 @@ class ParseFileRequest(BaseModel):
                 error={"message": "Either 'file_url' or 'contents' must be provided."}
             )
         return values
+    
+
+class ExtractResponse(BaseModel):
+    output: list = Field(..., description="The output of the extraction process.")
+    metadata: dict = Field(..., description="Metadata related to the extraction process.")

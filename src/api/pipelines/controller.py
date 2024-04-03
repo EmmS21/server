@@ -9,7 +9,12 @@ from _exceptions import route_exception_handler, NotFoundError
 
 from .service import PipelineAsyncService, process_orchestrator
 from .tasks import process_pipeline
-from .model import PipelineCreateRequest, PipelineResponse, PipelineConnection
+from .model import (
+    PipelineCreateRequest,
+    PipelineResponse,
+    PipelineConnection,
+    PipelineTaskResponse,
+)
 
 router = APIRouter()
 
@@ -45,10 +50,17 @@ pipeline = {
 }
 
 
-# invoke pipeline
-@router.post("/{pipeline_id}")
+# mixpeek.pipeline.invoke
+@router.post(
+    "/{pipeline_id}",
+    response_model=PipelineTaskResponse,
+    openapi_extra={
+        "x-fern-sdk-method-name": "invoke",
+        "x-fern-sdk-group-name": ["pipeline"],
+    },
+)
 @route_exception_handler
-async def invoke_pipeline(request: Request, pipeline_id: str):
+async def invoke(request: Request, pipeline_id: str):
     payload = await request.json()
     pipeline_service = PipelineAsyncService(request.index_id)
     pipeline = await pipeline_service.get_one({"pipeline_id": pipeline_id})
@@ -70,21 +82,33 @@ async def invoke_pipeline(request: Request, pipeline_id: str):
     return {"task_id": task.id}
 
 
-# create pipeline
-@router.post("/")
+# mixpeek.pipeline.create
+@router.post(
+    "/",
+    openapi_extra={
+        "x-fern-sdk-method-name": "create",
+        "x-fern-sdk-group-name": ["pipeline"],
+    },
+)
 @route_exception_handler
-async def create_pipeline(
+async def create(
     request: Request,
-    # connection_info: PipelineConnection,
     pipeline_request: PipelineCreateRequest = Body(...),
 ):
     pipeline_service = PipelineAsyncService(request.index_id)
     return await pipeline_service.create(pipeline_request)
 
 
-@router.get("/status/{task_id}")
+# mixpeek.pipeline.status
+@router.get(
+    "/status/{task_id}",
+    openapi_extra={
+        "x-fern-sdk-method-name": "status",
+        "x-fern-sdk-group-name": ["pipeline"],
+    },
+)
 @route_exception_handler
-def task_status(request: Request, task_id: str):
+def status(request: Request, task_id: str):
     """Query tasks status."""
     task = process_pipeline.AsyncResult(task_id)
     if task.state == "PENDING":

@@ -67,6 +67,10 @@ class PipelineResponse(Pipeline):
     pass
 
 
+class PipelineTaskResponse(BaseModel):
+    task_id: str
+
+
 # class PipelineResponse(BaseModel):
 #     pipeline_id: str
 #     created_at: datetime

@@ -9,7 +9,7 @@ from users.service import UserService
 from .model import Pipeline, SourceDestinationMapping
 
 from extract.service import ParseHandler
-from extract.model import ParseFileRequest
+from extract.model import ExtractRequest
 
 from embed.service import EmbeddingHandler
 from storage.service import StorageHandler

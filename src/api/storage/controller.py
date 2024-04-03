@@ -13,22 +13,43 @@ from .model import StorageConnection
 router = APIRouter()
 
 
-@router.get("/connect")
+# mixpeek.storage.connect
+@router.get(
+    "/connect",
+    openapi_extra={
+        "x-fern-sdk-method-name": "connect",
+        "x-fern-sdk-group-name": ["storage"],
+    },
+)
 @limiter.limit("5/minute")
 @route_exception_handler
 def test_connection(request: Request):
     pass
 
 
-@router.get("/sample/database")
+# mixeek.storage.sample.database
+@router.get(
+    "/sample/database/{database_name}",
+    openapi_extra={
+        "x-fern-sdk-method-name": "database",
+        "x-fern-sdk-group-name": ["storage", "sample"],
+    },
+)
 @limiter.limit("5/minute")
 @route_exception_handler
-def sample_database(request: Request):
+def sample_database(request: Request, database_name: str):
     pass
 
 
-@router.get("/sample/collection")
+# mixeek.storage.sample.collection
+@router.get(
+    "/sample/collection/{collection_name}",
+    openapi_extra={
+        "x-fern-sdk-method-name": "collection",
+        "x-fern-sdk-group-name": ["storage", "sample"],
+    },
+)
 @limiter.limit("5/minute")
 @route_exception_handler
-def sample_collection(request: Request):
+def sample_collection(request: Request, collection_name: str):
     pass

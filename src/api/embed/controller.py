@@ -15,15 +15,25 @@ from .service import EmbeddingHandler
 router = APIRouter()
 
 
-@router.post("/config", response_model=ConfigsResponse)
+# mixpeek.embed.config
+@router.post(
+    "/config",
+    response_model=ConfigsResponse,
+    openapi_extra={"x-fern-sdk-method-name": "get_model_config"},
+)
 @route_exception_handler
-async def get_dimensions(data: ConfigsRequest):
+async def embed_config(data: ConfigsRequest):
     embedding_handler = EmbeddingHandler(data.modality, data.model)
     return await embedding_handler.get_configs()
 
 
-@router.post("/", response_model=EmbeddingResponse)
+# mixpeek.embed
+@router.post(
+    "/",
+    response_model=EmbeddingResponse,
+    openapi_extra={"x-fern-sdk-method-name": "embed"},
+)
 @route_exception_handler
-async def embed_input(data: EmbeddingRequest):
+async def embed(data: EmbeddingRequest):
     embedding_handler = EmbeddingHandler(data.modality, data.model)
     return await embedding_handler.encode(data.model_dump())

@@ -3,7 +3,7 @@ import json
 
 from config import services_url
 
-from .model import ParseFileRequest
+from .model import ExtractRequest
 from _exceptions import InternalServerError, NotFoundError, BadRequestError
 from utilities.methods import create_success_response, _send_post_request
 
@@ -77,7 +77,7 @@ class ParseHandler:
                 return modality
         raise BadRequestError(f"Content type {content_type} not recognized")
 
-    async def parse(self, parser_request: ParseFileRequest):
+    async def parse(self, parser_request: ExtractRequest):
         # if there is no file_url then modality is automatically text
         if parser_request.file_url:
             content_type = await self._get_file_type(parser_request.file_url)

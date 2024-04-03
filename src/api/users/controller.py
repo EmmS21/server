@@ -23,15 +23,30 @@ async def create_user_private(user: UserRequest, Authorization: str = Header(Non
     return user_service.create_user(user)
 
 
-# public
-@router.get("/", response_model=User)
+# mixpeek.user.get
+@router.get(
+    "/",
+    response_model=User,
+    openapi_extra={
+        "x-fern-sdk-method-name": "get",
+        "x-fern-sdk-group-name": ["user"],
+    },
+)
 @route_exception_handler
 async def get_user(index_id: str = Depends(get_index_id)):
     user_service = UserService()
     return user_service.get_user_by_index_id(index_id)
 
 
-@router.put("/", response_model=User)
+# mixpeek.user.update
+@router.put(
+    "/",
+    response_model=User,
+    openapi_extra={
+        "x-fern-sdk-method-name": "update",
+        "x-fern-sdk-group-name": ["user"],
+    },
+)
 @route_exception_handler
 async def update_user(update: UpdateUserRequest, index_id: str = Depends(get_index_id)):
     user_service = UserService()

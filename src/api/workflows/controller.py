@@ -17,7 +17,15 @@ from db.model import PaginationParams
 router = APIRouter()
 
 
-@router.post("/", response_model=WorkflowResponse)
+# mixpeek.workflow.create
+@router.post(
+    "/",
+    response_model=WorkflowResponse,
+    openapi_extra={
+        "x-fern-sdk-method-name": "create",
+        "x-fern-sdk-group-name": ["workflow"],
+    },
+)
 @route_exception_handler
 async def create_workflow(
     request: Request, workflow_request: WorkflowCreateRequest = Body(...)
@@ -26,16 +34,21 @@ async def create_workflow(
     return workflow_service.create(workflow_request)
 
 
-@router.post("/{workflow_id}/invoke")
+# mixpeek.workflow.invoke
+@router.post(
+    "/{workflow_id}/invoke",
+    openapi_extra={
+        "x-fern-sdk-method-name": "invoke",
+        "x-fern-sdk-group-name": ["workflow"],
+    },
+)
 @route_exception_handler
-async def run_workflow(
+async def invoke_workflow(
     request: Request,
     workflow_id: str,
     parameters: dict = Body(...),
     websocket_id: Optional[str] = None,
 ):
-
-    print(request.index_id)
 
     workflow_service = WorkflowSyncService(request.index_id)
     workflow = workflow_service.get_and_validate(workflow_id)
@@ -53,7 +66,15 @@ async def run_workflow(
     return result
 
 
-@router.post("/code", response_model=WorkflowResponse)
+# mixpeek.workflow.code
+@router.post(
+    "/code",
+    response_model=WorkflowResponse,
+    openapi_extra={
+        "x-fern-sdk-method-name": "code",
+        "x-fern-sdk-group-name": ["workflow"],
+    },
+)
 @route_exception_handler
 async def convert_code_to_string(code: str = Body(...)):
     return create_success_response({"code_as_string": code})
