@@ -21,7 +21,11 @@ from slowapi.errors import RateLimitExceeded
 from api import api_router
 
 
-app = FastAPI(openapi_url="/docs/openapi.json", title="NUX API")
+app = FastAPI(
+    openapi_url="/docs/openapi.json",
+    title="Mixpeek API",
+    servers=[{"url": "https://api.mixpeek.com/"}],
+)
 
 
 # Add the limiter as a middleware
