@@ -53,7 +53,7 @@ async def run_workflow(
     return result
 
 
-@router.get("/code", response_model=WorkflowResponse)
+@router.post("/code", response_model=WorkflowResponse)
 @route_exception_handler
 async def convert_code_to_string(code: str = Body(...)):
     return create_success_response({"code_as_string": code})
