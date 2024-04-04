@@ -1,6 +1,6 @@
 import json
 from db.service import BaseAsyncDBService, BaseSyncDBService
-from _exceptions import BadRequestError, NotFoundError
+from _exceptions import BadRequestError, NotFoundError, InternalServerError
 from bson import ObjectId
 
 from users.service import UserService
@@ -84,12 +84,16 @@ class PipelineProcessor:
 
         print("Connected to the database!")
 
-    def log_error_in_tasks_db(self, response):
-        # this is where we log the customers db errors
-        # await self.storage_client["mixpeek_errors"].insert(response)
-        print(f"Insert failed: {response}")
+    def log_error_in_tasks_db(self, error: InternalServerError):
+        error_dict = {
+            "task_id": self.task_id,
+            "status_code": error.status,
+            "error": error.error.get("message", ""),
+        }
+        # rest of your code
+        print(f"Insert failed: {error.error.get('message', '')}")
         self.pipeline_tasks.update_one(
-            {"task_id": self.task_id}, {"status": "FAILURE", "error": response}
+            {"task_id": self.task_id}, {"status": "FAILURE", "error": error_dict}
         )
 
     async def insert_into_destination(self, obj, destination):
@@ -102,20 +106,15 @@ class PipelineProcessor:
                 raise Exception("Storage handler client is not available.")
 
         except Exception as e:
-            self.log_error_in_tasks_db(
-                {
-                    "task_id": self.task_id,
-                    # "object": obj,
-                    "error": str(e),
-                }
-            )
+            error = InternalServerError({"message": str(e)})
+            self.log_error_in_tasks_db(error)
 
     async def parse_file(self, parser_request):
         parse_handler = ExtractHandler()
         parse_request = ExtractRequest(**parser_request)
         parse_response = await parse_handler.parse(parse_request)
         # need to decode because its a success response
-        return json.loads(parse_response.body.decode())
+        return parse_response
 
     async def process_chunks(self, embedding_model, chunks, destination, parent_id):
         # TODO: add support for other modalities
@@ -123,24 +122,17 @@ class PipelineProcessor:
 
         # iterate over each chunk and embed the text
         for chunk in chunks:
-            embedding_response = await embed_handler.encode(
-                EmbeddingRequest(input=chunk["text"], model=embedding_model)
-            )
-            # need to decode because its a success response
-            embedding_response_content = json.loads(embedding_response.body.decode())
 
-            # if it failed just continue to the next one
-            if not embedding_response_content.get("success"):
-                self.log_error_in_tasks_db(
-                    {
-                        "task_id": self.task_id,
-                        "status_code": embedding_response_content["status"],
-                        "error": embedding_response_content["message"],
-                    }
+            try:
+                embedding_response = await embed_handler.encode(
+                    EmbeddingRequest(input=chunk["text"], model=embedding_model)
                 )
+            except Exception as e:
+                error = InternalServerError({"message": embedding_response["message"]})
+                self.log_error_in_tasks_db(error)
                 continue
 
-            embedding = embedding_response_content["response"]["embedding"]
+            embedding = embedding_response["embedding"]
             obj = {
                 destination["field"]: chunk["text"],
                 destination["embedding"]: embedding,
@@ -172,22 +164,22 @@ class PipelineProcessor:
             }
 
             # response from the parse request
-            parse_response = await self.parse_file(parse_request)
-
-            # if it failed, end the process
-            if not parse_response.get("success"):
-                await self.log_error_in_tasks_db(
-                    {
-                        "task_id": self.task_id,
-                        "status_code": parse_response["status"],
-                        "error": parse_response["message"],
-                    }
-                )  # type: ignore
+            try:
+                parse_response = await self.parse_file(parse_request)
+            except Exception as e:
+                error = InternalServerError({"message": str(e)})
+                self.log_error_in_tasks_db(error)
                 return None
 
             await self.process_chunks(
                 embedding_model=mapping["embedding_model"],
-                chunks=parse_response["response"]["output"],
+                # Prepare the chunks for processing. If the output from the parse request is a string,
+                # convert it into a list. If it's already a list, use it as is.
+                chunks=(
+                    [parse_response["output"]]
+                    if isinstance(parse_response["output"], str)
+                    else parse_response["output"]
+                ),
                 destination=mapping["destination"],
                 parent_id=prepared_payload["parent_id"],
             )
