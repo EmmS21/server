@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from rate_limiter import limiter
 from _exceptions import route_exception_handler
 
 from .model import ExtractRequest, ExtractResponse
@@ -17,8 +18,10 @@ router = APIRouter()
         # "x-fern-sdk-group-name": ["extract"],
     },
 )
+@limiter.limit("10/minute")
 @route_exception_handler
 async def extract(
+    request: Request,
     extract_request: ExtractRequest,
 ):
     extract_handler = ExtractHandler()

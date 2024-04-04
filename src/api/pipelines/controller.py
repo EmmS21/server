@@ -58,6 +58,7 @@ pipeline = {
         "x-fern-sdk-group-name": ["pipeline"],
     },
 )
+@limiter.limit("10/minute")
 @route_exception_handler
 async def invoke(request: Request, pipeline_id: str):
     payload = await request.json()

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Body, Depends, Request
 from typing import List, Optional
+from rate_limiter import limiter
 
 from _exceptions import route_exception_handler
 
@@ -46,6 +47,7 @@ async def create_workflow(
         "x-fern-sdk-group-name": ["workflow"],
     },
 )
+@limiter.limit("10/minute")
 @route_exception_handler
 async def invoke_workflow(
     request: Request,

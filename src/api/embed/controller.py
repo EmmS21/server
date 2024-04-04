@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request
+from rate_limiter import limiter
 
 from _exceptions import route_exception_handler
 
@@ -21,8 +22,9 @@ router = APIRouter()
     response_model=ConfigsResponse,
     openapi_extra={"x-fern-sdk-method-name": "get_model_config"},
 )
+@limiter.limit("10/minute")
 @route_exception_handler
-async def embed_config(data: ConfigsRequest):
+async def embed_config(request: Request, data: ConfigsRequest):
     embedding_handler = EmbeddingHandler()
     return await embedding_handler.get_configs(data)
 
@@ -33,7 +35,8 @@ async def embed_config(data: ConfigsRequest):
     response_model=EmbeddingResponse,
     openapi_extra={"x-fern-sdk-method-name": "embed"},
 )
+@limiter.limit("10/minute")
 @route_exception_handler
-async def embed(data: EmbeddingRequest):
+async def embed(request: Request, data: EmbeddingRequest):
     embedding_handler = EmbeddingHandler()
     return await embedding_handler.encode(data)
