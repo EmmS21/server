@@ -44,3 +44,7 @@ class WorkflowResponse(BaseModel):
 
 # class WorkflowInvokeResponse(BaseModel):
 #     response: dict
+
+
+class WorkflowCodeResponse(BaseModel):
+    code_as_string: str

@@ -5,10 +5,14 @@ from _exceptions import route_exception_handler
 
 
 from utilities.helpers import generate_uuid, current_time
-from utilities.methods import create_success_response
 from utilities.code import CodeValidation
 
-from .model import WorkflowCreateRequest, WorkflowSchema, WorkflowResponse
+from .model import (
+    WorkflowCreateRequest,
+    WorkflowSchema,
+    WorkflowResponse,
+    WorkflowCodeResponse,
+)
 from .service import WorkflowSyncService
 from .invoke import invoke_handler
 
@@ -69,7 +73,7 @@ async def invoke_workflow(
 # mixpeek.workflow.code
 @router.post(
     "/code",
-    response_model=WorkflowResponse,
+    response_model=WorkflowCodeResponse,
     openapi_extra={
         "x-fern-sdk-method-name": "code",
         "x-fern-sdk-group-name": ["workflow"],
@@ -77,4 +81,4 @@ async def invoke_workflow(
 )
 @route_exception_handler
 async def convert_code_to_string(code: str = Body(...)):
-    return create_success_response({"code_as_string": code})
+    return {"code_as_string": code}

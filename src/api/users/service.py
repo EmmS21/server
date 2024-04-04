@@ -3,7 +3,6 @@ from .model import User, UserRequest, Connection, UpdateUserRequest
 from _exceptions import BadRequestError, NotFoundError
 from db.service import sync_db
 
-from utilities.methods import create_success_response
 from utilities.helpers import generate_uuid
 from utilities.encryption import SecretCipher
 
@@ -27,7 +26,7 @@ class UserService:
         user_data_json = user_data.model_dump()
         try:
             self.collection.insert_one(user_data_json.copy())
-            return create_success_response(user_data_json)
+            return user_data_json
         except Exception as e:
             raise BadRequestError(str(e))
 
@@ -58,7 +57,7 @@ class UserService:
         )
         if not user_data:
             raise NotFoundError("User not found")
-        return create_success_response(user_data)
+        return user_data
 
     def get_user_by_api_key(self, api_key: str) -> Optional[User]:
         """
@@ -88,4 +87,4 @@ class UserService:
         user_data = self.collection.find_one({"email": user.email})
         if not user_data:
             raise NotFoundError("User not found")
-        return create_success_response(user_data)
+        return user_data

@@ -4,7 +4,6 @@ import json
 
 from rate_limiter import limiter
 
-from utilities.methods import create_success_response
 from _exceptions import route_exception_handler, NotFoundError
 
 from .service import PipelineAsyncService, process_orchestrator
@@ -62,18 +61,19 @@ pipeline = {
 @route_exception_handler
 async def invoke(request: Request, pipeline_id: str):
     payload = await request.json()
-    pipeline_service = PipelineAsyncService(request.index_id)
+    index_id = request.index_id  # type: ignore
+    pipeline_service = PipelineAsyncService(index_id)
     pipeline = await pipeline_service.get_one({"pipeline_id": pipeline_id})
 
     if not pipeline:
-        raise NotFoundError("Pipeline not found.")
+        raise NotFoundError({"error": "Pipeline not found."})
 
     if isinstance(payload, str):
         payload = json.loads(payload)
 
     task = process_pipeline.apply_async(
         kwargs={
-            "index_id": request.index_id,
+            "index_id": index_id,
             "pipeline": pipeline,
             "payload": payload,
         }
@@ -85,6 +85,7 @@ async def invoke(request: Request, pipeline_id: str):
 # mixpeek.pipeline.create
 @router.post(
     "/",
+    response_model=PipelineResponse,
     openapi_extra={
         "x-fern-sdk-method-name": "create",
         "x-fern-sdk-group-name": ["pipeline"],

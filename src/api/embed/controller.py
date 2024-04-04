@@ -23,8 +23,8 @@ router = APIRouter()
 )
 @route_exception_handler
 async def embed_config(data: ConfigsRequest):
-    embedding_handler = EmbeddingHandler(data.modality, data.model)
-    return await embedding_handler.get_configs()
+    embedding_handler = EmbeddingHandler()
+    return await embedding_handler.get_configs(data)
 
 
 # mixpeek.embed
@@ -35,5 +35,5 @@ async def embed_config(data: ConfigsRequest):
 )
 @route_exception_handler
 async def embed(data: EmbeddingRequest):
-    embedding_handler = EmbeddingHandler(data.modality, data.model)
-    return await embedding_handler.encode(data.model_dump())
+    embedding_handler = EmbeddingHandler()
+    return await embedding_handler.encode(data)

@@ -56,7 +56,7 @@ class GPT:
         resolved_schema = self._resolve_references(schema_copy, definitions)
         simplified_schema = self._simplify_anyof_allof(resolved_schema)
         if "$defs" in simplified_schema:
-            del simplified_schema["$defs"]
+            del simplified_schema["$defs"]  # type: ignore
         return simplified_schema
 
     def _extract_response_format(self):
@@ -76,20 +76,13 @@ class GPT:
         return {}
 
     def run(self):
-        response_object = GenerationResponse(
-            metadata=None,
-            response={},
-            error=None,
-            status=500,
-            success=False,
-        )
-
+        response_object = {}
         settings = self._extract_settings()
         response_format = self._extract_response_format()
 
         if self.generation_request.context:
             self.generation_request.messages.append(
-                {"role": "user", "content": self.generation_request.context}
+                {"role": "user", "content": self.generation_request.context}  # type: ignore
             )
         messages = [{"role": "user", "content": self.generation_request.context}]
         tools = [
@@ -114,23 +107,20 @@ class GPT:
                     "function": {"name": "my_function"},
                 },  # auto is default, but we'll be explicit
                 **settings,
-            ).json()
+            ).json()  # type: ignore
             gpt_json = json.loads(response)
             tool_output = gpt_json["choices"][0]["message"]["tool_calls"][0][
                 "function"
             ]["arguments"]
 
-            response_object.response = json.loads(tool_output)
-            response_object.metadata = {
-                "elapsed_time": (time.time() * 1000) - start_time,
+            response_object["response"] = json.loads(tool_output)
+            response_object["metadata"] = {
                 "total_tokens": gpt_json["usage"]["total_tokens"],
                 "generation_id": generate_uuid(),
                 "model": self.generation_request.model,
                 "created_at": current_time(),
-            }
-            response_object.status = 200
-            response_object.success = True
-
+            }  # type: ignore
+            response_object["elapsed_time"] = (time.time() * 1000) - start_time
             return response_object
 
         except NotFoundError as e:

@@ -4,7 +4,6 @@ import json
 
 from rate_limiter import limiter
 
-from utilities.methods import create_success_response
 from _exceptions import route_exception_handler, NotFoundError
 
 from .model import StorageConnection

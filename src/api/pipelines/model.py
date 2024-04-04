@@ -16,34 +16,43 @@ class FieldType(str, Enum):
 
 
 class Source(BaseModel):
-    field: str
-    type: FieldType
-    settings: dict
+    field: str = Field(..., description="The field name")
+    type: FieldType = Field(..., description="The type of the field")
+    settings: dict = Field(..., description="The settings for the field")
 
 
 class Destination(BaseModel):
-    collection: str
-    field: str
-    embedding: str
+    collection: str = Field(..., description="The collection name")
+    field: str = Field(..., description="The field name")
+    embedding: str = Field(..., description="The embedding")
 
 
 class SourceDestinationMapping(BaseModel):
-    embedding_model: str
-    source: Source
-    destination: Destination
+    embedding_model: str = Field(..., description="The embedding model")
+    source: Source = Field(..., description="The source")
+    destination: Destination = Field(..., description="The destination")
 
 
 class Pipeline(BaseModel):
-    pipeline_id: str = Field(default_factory=lambda: generate_uuid(6, False))
-    enabled: bool = False
+    pipeline_id: str = Field(
+        default_factory=lambda: generate_uuid(6, False),
+        description="The ID of the pipeline",
+    )
+    enabled: Optional[bool] = Field(
+        default=False, description="Whether the pipeline is enabled"
+    )
 
-    connection: Optional[Connection]
-    source_destination_mappings: List[SourceDestinationMapping]
-    metadata: Optional[dict]
+    connection: Optional[Connection] = Field(None, description="The connection")
+    source_destination_mappings: List[SourceDestinationMapping] = Field(
+        ..., description="The source-destination mappings"
+    )
+    metadata: Optional[dict] = Field(None, description="The metadata")
 
     # internal keys
-    created_at: datetime = Field(default_factory=lambda: current_time())
-    last_run: Optional[datetime] = Field(None)
+    created_at: datetime = Field(
+        default_factory=lambda: current_time(), description="The creation time"
+    )
+    last_run: Optional[datetime] = Field(default=None, description="The last run time")
 
 
 # requests
@@ -52,8 +61,10 @@ class Pipeline(BaseModel):
 
 # Pipeline schema definition
 class PipelineCreateRequest(BaseModel):
-    source_destination_mappings: List[SourceDestinationMapping]
-    metadata: Optional[dict] = {}
+    source_destination_mappings: List[SourceDestinationMapping] = Field(
+        ..., description="The source-destination mappings"
+    )
+    metadata: Optional[dict] = Field(None, description="The metadata")
 
 
 class PipelineConnection(Connection):
@@ -68,15 +79,4 @@ class PipelineResponse(Pipeline):
 
 
 class PipelineTaskResponse(BaseModel):
-    task_id: str
-
-
-# class PipelineResponse(BaseModel):
-#     pipeline_id: str
-#     created_at: datetime
-#     last_run: Optional[datetime]
-#     enabled: bool
-#     connection: Connection
-#     source: SourceSchema
-#     destination: DestinationSchema
-#     metadata: Optional[dict] = {}
+    task_id: str = Field(..., description="The ID of the task")

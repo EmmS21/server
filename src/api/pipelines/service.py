@@ -2,14 +2,14 @@ import json
 from db.service import BaseAsyncDBService, BaseSyncDBService
 from _exceptions import BadRequestError, NotFoundError
 from bson import ObjectId
-from utilities.methods import create_success_response
 
 from users.service import UserService
 
 from .model import Pipeline, SourceDestinationMapping
 
-from extract.service import ParseHandler
+from extract.service import ExtractHandler
 from extract.model import ExtractRequest
+from embed.model import EmbeddingRequest
 
 from embed.service import EmbeddingHandler
 from storage.service import StorageHandler
@@ -22,7 +22,9 @@ async def process_orchestrator(
         pipeline_processor = PipelineProcessor(index_id, task_id, pipeline)
         return await pipeline_processor.process(payload)
     else:
-        raise BadRequestError(f"pipeline_id: {pipeline['pipeline_id']} is disabled")
+        raise BadRequestError(
+            {"error": f"pipeline_id: {pipeline['pipeline_id']} is disabled"}
+        )
 
 
 class PipelineTaskSyncService(BaseSyncDBService):
@@ -40,8 +42,8 @@ class PipelineAsyncService(BaseAsyncDBService):
         user_service = UserService()
         user = user_service.get_user_by_index_id(self.index_id)
 
-        if not user.connections or len(user.connections) == 0:
-            raise NotFoundError("Connection information found")
+        if user is None or not user.connections or len(user.connections) == 0:
+            raise NotFoundError({"error": "Connection information not found"})
 
         connection_information = user.connections[0]
 
@@ -59,7 +61,7 @@ class PipelineAsyncService(BaseAsyncDBService):
 
         await self.create_one(obj)
 
-        return create_success_response(obj)
+        return obj
 
 
 class PipelineProcessor:
@@ -78,7 +80,7 @@ class PipelineProcessor:
         await self.storage_handler.connect_to_db()
 
         if self.storage_handler.client is None:
-            raise BadRequestError("Failed to connect to the database")
+            raise BadRequestError({"error": "Failed to connect to the database"})
 
         print("Connected to the database!")
 
@@ -92,9 +94,12 @@ class PipelineProcessor:
 
     async def insert_into_destination(self, obj, destination):
         try:
-            collection = self.storage_handler.client[destination["collection"]]
-            print("inserting into collection")
-            await collection.insert_one(obj)
+            if self.storage_handler.client is not None:
+                collection = self.storage_handler.client[destination["collection"]]
+                print("inserting into collection")
+                await collection.insert_one(obj)
+            else:
+                raise Exception("Storage handler client is not available.")
 
         except Exception as e:
             self.log_error_in_tasks_db(
@@ -106,25 +111,27 @@ class PipelineProcessor:
             )
 
     async def parse_file(self, parser_request):
-        parse_handler = ParseHandler()
-        parse_request = ParseFileRequest(**parser_request)
+        parse_handler = ExtractHandler()
+        parse_request = ExtractRequest(**parser_request)
         parse_response = await parse_handler.parse(parse_request)
         # need to decode because its a success response
         return json.loads(parse_response.body.decode())
 
     async def process_chunks(self, embedding_model, chunks, destination, parent_id):
         # TODO: add support for other modalities
-        embed_handler = EmbeddingHandler(modality="text", model=embedding_model)
+        embed_handler = EmbeddingHandler()
 
         # iterate over each chunk and embed the text
         for chunk in chunks:
-            embedding_response = await embed_handler.encode({"input": chunk["text"]})
+            embedding_response = await embed_handler.encode(
+                EmbeddingRequest(input=chunk["text"], model=embedding_model)
+            )
             # need to decode because its a success response
             embedding_response_content = json.loads(embedding_response.body.decode())
 
             # if it failed just continue to the next one
             if not embedding_response_content.get("success"):
-                await self.log_error_in_tasks_db(
+                self.log_error_in_tasks_db(
                     {
                         "task_id": self.task_id,
                         "status_code": embedding_response_content["status"],
@@ -175,7 +182,7 @@ class PipelineProcessor:
                         "status_code": parse_response["status"],
                         "error": parse_response["message"],
                     }
-                )
+                )  # type: ignore
                 return None
 
             await self.process_chunks(

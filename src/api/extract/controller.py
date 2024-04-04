@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from _exceptions import route_exception_handler
 
 from .model import ExtractRequest, ExtractResponse
-from .service import ParseHandler
+from .service import ExtractHandler
 
 
 router = APIRouter()
@@ -19,7 +19,7 @@ router = APIRouter()
 )
 @route_exception_handler
 async def extract(
-    parser_request: ExtractRequest,
+    extract_request: ExtractRequest,
 ):
-    parse_handler = ParseHandler()
-    return await parse_handler.parse(parser_request)
+    extract_handler = ExtractHandler()
+    return await extract_handler.parse(extract_request)

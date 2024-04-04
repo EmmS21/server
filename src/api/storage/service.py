@@ -43,19 +43,19 @@ class StorageHandler:
         try:
             self.storage_handler = self.storage_handlers[engine]
         except ValidationError as e:
-            raise BadRequestError(f"Invalid connection info: {e}")
+            raise BadRequestError({"error": f"Invalid connection info: {e}"})
         except KeyError:
-            raise BadRequestError(f"Unsupported storage handler: {engine}")
+            raise BadRequestError({"error": f"Unsupported storage handler: {engine}"})
 
     async def connect_to_db(self):
         try:
             # now we have a self.db attribute that we can use to interact with the database
             self.client = await self.storage_handler.connect()
         except Exception as e:
-            raise BadRequestError(f"Failed to connect to the database: {e}")
+            raise BadRequestError({"error": f"Failed to connect to the database: {e}"})
 
     def handle_payload(self, payload):
         try:
             return self.storage_handler.handle_payload(payload)
         except Exception as e:
-            raise BadRequestError(f"Failed to handle payload: {e}")
+            raise BadRequestError({"error": f"Failed to handle payload: {e}"})

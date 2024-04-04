@@ -21,7 +21,7 @@ def create_json_response(
 
 
 def create_success_response(response: Optional[str]):
-    return create_json_response(True, 200, None, response)
+    return create_json_response(True, 200, "", response)
 
 
 def check_cpu_usage(func):

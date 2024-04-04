@@ -33,23 +33,28 @@ async def generate_orchestrator(request: GenerationRequest) -> GenerationRespons
             request.model.provider,
             request,
         )
-        return model_instance.run()
+        response_dict = model_instance.run()
+        return GenerationResponse(**response_dict)
 
     except UnsupportedModelProviderError as e:
-        raise BadRequestError(error="Unsupported model provider.")
+        raise BadRequestError(error={"message": "Unsupported model provider."})
 
     except UnsupportedModelVersionError as e:
-        raise NotFoundError(error="Unsupported model version.")
+        raise NotFoundError(error={"message": "Unsupported model version."})
 
     except JSONSchemaParsingError as e:
         raise BadRequestError(
-            error="JSON schema parsing error. Please make sure you provided a valid json schema."
+            error={
+                "message": "JSON schema parsing error. Please make sure you provided a valid json schema."
+            }
         )
 
     except ModelExecutionError as e:
         raise InternalServerError(
-            error="Something went wrong when calling the model. Please try again."
+            error={
+                "message": "Something went wrong when calling the model. Please try again."
+            }
         )
 
     except ModelResponseFormatValidationError as e:
-        raise BadRequestError(error=str(e))
+        raise BadRequestError(error={"message": str(e)})

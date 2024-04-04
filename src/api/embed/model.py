@@ -3,7 +3,6 @@ from typing import List, Optional
 from enum import Enum
 
 
-# fmt: off
 class Modality(Enum):
     # VIDEO = "video"
     # IMAGE = "image"
@@ -18,22 +17,37 @@ class Models(str, Enum):
 
 
 class ConfigsRequest(BaseModel):
-    modality: Optional[Modality] = Field("text", description="The modality of the input data.")
-    model: Optional[Models] = Field(Models.MINILM, description="The model to be used for processing.")
+    modality: Optional[Modality] = Field(
+        default="text", description="The modality of the input data."
+    )
+    model: Optional[Models] = Field(
+        default=Models.MINILM, description="The model to be used for processing."
+    )
 
 
 class ConfigsResponse(BaseModel):
     dimensions: int = Field(..., description="The dimensions of the processed data.")
     elapsed_time: float = Field(..., description="The time taken to process the data.")
-    token_size: int = Field(..., description="The size of the tokens in the processed data.")
+    token_size: int = Field(
+        ..., description="The size of the tokens in the processed data."
+    )
 
 
 class EmbeddingRequest(BaseModel):
     input: str = Field(..., description="The input data to be processed.")
-    modality: Optional[Modality] = Field("text", description="The modality of the input data.")
-    model: Optional[str] = Field("sentence-transformers/all-MiniLM-L6-v2", description="The model to be used for processing.")
+    modality: Optional[Modality] = Field(
+        default="text", description="The modality of the input data."
+    )
+    model: Optional[str] = Field(
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        description="The model to be used for processing.",
+    )
 
 
 class EmbeddingResponse(BaseModel):
-    embedding: List[float] = Field(..., description="The embedding of the processed data.")
-    elapsed_time: float = Field(..., description="The time taken to process the data.")
+    embedding: List[float] = Field(
+        ..., description="The embedding of the processed data."
+    )
+    elapsed_time: Optional[float] = Field(
+        default=None, description="The time taken to process the data."
+    )

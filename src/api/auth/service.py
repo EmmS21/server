@@ -34,6 +34,6 @@ def get_index_id(
     if not index_id:
         raise NotFoundError(error="Index ID not found")
 
-    request.index_id = index_id
+    request.index_id = index_id  # Update the type hint for the request parameter to include the index_id attribute
 
     return index_id

@@ -109,3 +109,9 @@ class ModelResponseFormatValidationError(Exception):
         self.error = error
         self.suggestion = suggestion
         super().__init__(f"{self.error} Suggestion: {self.suggestion}")
+
+
+class TooManyRequestsError(Exception):
+    """Exception raised for too many requests."""
+
+    pass

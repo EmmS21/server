@@ -1,5 +1,6 @@
 import httpx
 import json
+import time
 
 from config import services_url
 
@@ -48,7 +49,7 @@ modality_to_content_types = {
 }
 
 
-class ParseHandler:
+class ExtractHandler:
     def __init__(self):
         pass
 
@@ -75,7 +76,9 @@ class ParseHandler:
         for modality, content_types in modality_to_content_types.items():
             if content_type in content_types:
                 return modality
-        raise BadRequestError(f"Content type {content_type} not recognized")
+        raise BadRequestError(
+            error={"message": f"Content type {content_type} not recognized"}
+        )
 
     async def parse(self, parser_request: ExtractRequest):
         # if there is no file_url then modality is automatically text
@@ -90,9 +93,13 @@ class ParseHandler:
         data = json.dumps(parser_request.model_dump())
 
         try:
+            start_time = time.time()
             resp = await _send_post_request(url, data, timeout=180)
-            return create_success_response(resp)
+            resp["elapsed_time"] = time.time() - start_time
+            return resp
         except Exception as e:
             raise InternalServerError(
-                error="There was an error with the request, reach out to support"
+                error={
+                    "message": "There was an error with the request, reach out to support"
+                }
             )

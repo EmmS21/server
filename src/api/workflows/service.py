@@ -12,7 +12,6 @@ from utilities.helpers import (
     generate_function_name,
     current_time,
 )
-from utilities.methods import create_success_response
 
 from _exceptions import InternalServerError, NotFoundError, BadRequestError
 
@@ -79,7 +78,7 @@ class WorkflowSyncService(BaseSyncDBService):
             },
         }
 
-        return create_success_response(workflow_response)
+        return workflow_response
 
     def get_and_validate(self, workflow_id):
         workflow = self.get(workflow_id)

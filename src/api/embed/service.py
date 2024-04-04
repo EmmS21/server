@@ -5,37 +5,42 @@ import time
 from config import services_url
 
 from _exceptions import InternalServerError, NotFoundError, BadRequestError
-from utilities.methods import create_success_response, _send_post_request
+from utilities.methods import _send_post_request
+
+from .model import EmbeddingRequest, ConfigsRequest
 
 
 class EmbeddingHandler:
-    def __init__(self, modality="text", model="sentence-transformers/all-MiniLM-L6-v2"):
-        self.modality = modality
-        self.model = model
+    def __init__(self):
+        pass
 
-    async def encode(self, data):
-        url = f"{services_url}/embed/{self.modality}"
-        payload = {"model": self.model, **data}
+    async def encode(self, data: EmbeddingRequest):
+        url = f"{services_url}/embed/{data.modality}"
+        payload = {"model": data.model, **data.model_dump()}
         try:
             start_time = time.time() * 1000
             resp = await _send_post_request(url, json.dumps(payload))
-            return create_success_response(resp)
+            resp["elapsed_time"] = time.time() * 1000 - start_time
+            return resp
         except Exception as e:
-            raise InternalServerError(error=e)
+            raise InternalServerError(error={"message": str(e)})
 
-    async def get_configs(self):
+    async def get_configs(self, data: ConfigsRequest):
         """
         accepts
             modality: Optional[Modality] = "text"
             model: Optional[str] = "sentence-transformers/all-MiniLM-L6-v2"
         """
-        url = f"{services_url}/embed/{self.modality}/config"
-        payload = {"model": self.model, "modality": self.modality}
+        url = f"{services_url}/embed/{data.modality}/config"
+        payload = {"model": data.model, "modality": data.modality}
         try:
             start_time = time.time() * 1000
             resp = await _send_post_request(url, json.dumps(payload))
-            return create_success_response(resp)
+            resp["elapsed_time"] = time.time() * 1000 - start_time
+            return resp
         except Exception as e:
             raise InternalServerError(
-                error="There was an error with the request, reach out to support"
+                error={
+                    "message": "There was an error with the request, reach out to support"
+                }
             )
