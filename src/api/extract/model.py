@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, root_validator
-from typing import Optional
+from typing import Optional, Any
 from _exceptions import BadRequestError
 
 
@@ -153,7 +153,7 @@ class ExtractRequest(BaseModel):
 
 
 class ExtractResponse(BaseModel):
-    output: list = Field(..., description="The output of the extraction process.")
+    output: Any = Field(..., description="The output of the extraction process.")
     metadata: dict = Field(
         ..., description="Metadata related to the extraction process."
     )
