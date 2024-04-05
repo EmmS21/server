@@ -2,16 +2,16 @@
   <img height="60" src="https://mixpeek.com/static/img/logo-dark.png" alt="Mixpeek Logo">
 </p>
 <p align="center">
-<strong><a href="https://mixpeek.com/start">Sign Up</a> | <a href="https://docs.mixpeek.com/">Documentation</a> | <a href="https://learn.mixpeek.com">Email List</a> | <a href="https://join.slack.com/t/mixpeek/shared_invite/zt-2edc3l6t2-H8VxHFAIl0cnpqDmyFGt0A">Slack</a>
+<strong><a href="https://mixpeek.com/start">Sign Up</a> | <a href="https://docs.mixpeek.com/">Documentation</a> | <a href="https://learn.mixpeek.com">Email List</a>
 </strong>
 </p>
 
 <p align="center">
-    <a href="https://github.com/mixpeek/mixpeek-python/stargazers">
-        <img src="https://img.shields.io/github/stars/mixpeek/mixpeek-python.svg?style=flat&color=yellow" alt="Github stars"/>
+    <a href="https://github.com/mixpeek/server/stargazers">
+        <img src="https://img.shields.io/github/stars/mixpeek/server.svg?style=flat&color=yellow" alt="Github stars"/>
     </a>
     <a href="https://github.com/mixpeek/mixpeek-python/issues">
-        <img src="https://img.shields.io/github/issues/mixpeek/mixpeek-python.svg?style=flat&color=success" alt="GitHub issues"/>
+        <img src="https://img.shields.io/github/issues/mixpeek/server.svg?style=flat&color=success" alt="GitHub issues"/>
     </a>
     <a href="https://join.slack.com/t/mixpeek/shared_invite/zt-2edc3l6t2-H8VxHFAIl0cnpqDmyFGt0A">
         <img src="https://img.shields.io/badge/slack-join-green.svg?logo=slack" alt="Join Slack"/>
@@ -19,31 +19,28 @@
 </p>
 
 <h2 align="center">
-    <b>real-time multi-modal vector embedding pipeline. set and forget. 
-    </b>
+    <b>real-time multimodal inference pipeline. set and forget.</b>
 </h2>
 
 ## Overview
 
-Mixpeek automatically listens in on database changes, processes your files, and generates embeddings to send right back into your database.
+Mixpeek listens in on changes to your database then processes each change (`file_url` or `inline`) through an inference pipeline of: `extraction`, `generation` and `embedding` leaving your database with fresh multimodal data always.
 
-It removes the need of setting up architecture to track database changes, extracting content, processing and embedding it. This stuff doesn't move the needle in your business, so why focus on it?
+It removes the need of setting up architecture to track database changes, extracting content, processing and embedding it then treating each change as its' own atomic unit
 
 We support every modality: **documents, images, video, audio and of course text.**
 
 ### Integrations
 
-- [MongoDB Vector Search](https://www.mongodb.com/products/platform/atlas-vector-search)
-- [Supabase](https://supabase.com/vector)
+- [MongoDB](https://mixpeek.com/integrations/mongodb)
 
 ## Architecture
 
 Mixpeek is structured into two main services, each designed to handle a specific part of the process:
 
-- **API (Orchestrator)**: Coordinates the flow between services, ensuring smooth operation and handling failures gracefully.
-- **Listener**: Monitors the database for specified changes, triggering the process when changes are detected.
-- **Services**: Loads and parses the changed files, preparing them for processing (supports image, video audio and text)
-- **Inference**: Processes the parsed data, generating embeddings that can then be integrated back into the database.
+- **API Orchestrator**: Coordinates the flow between services, ensuring smooth operation and handling failures gracefully.
+- **Distributed Queue**:
+- **Inference Service**: Extraction, embedding, and generation of payloads
 
 These services are containerized and can be deployed on separate servers for optimal performance and scalability.
 
@@ -58,68 +55,114 @@ git clone git@github.com:mixpeek/server.git
 cd server
 ```
 
-First, build the Docker image:
+We use poetry for all services, but there is an optional Dockerfile in each. We'll use poetry in the setup for quick deployment.
+
+### Setup
+
+For each service you'll do the following:
+
+1. **Create a virtual environment**
+
+```
+poetry env use python3.10
+```
+
+2. **Activate the virtual environment**
+
+```
+poetry shell
+```
+
+3. **Install the requirements**
+
+```
+poetry install
+```
+
+#### API
+
+.env file:
 
 ```bash
-docker build -t my-app .
+SERVICES_CONTAINER_URL=http://localhost:8001
+PYTHON_VERSION=3.11.6
+OPENAI_KEY=
+ENCRYPTION_KEY=
+
+REDIS_URL=
+
+MONGO_URL=
+MONGODB_ATLAS_PUBLIC_KEY=
+MONGODB_ATLAS_PRIVATE_KEY=
+MONGODB_ATLAS_GROUP_ID=
+
+AWS_ACCESS_KEY=
+AWS_SECRET_KEY=
+AWS_REGION=
+AWS_ARN_LAMBDA=
+
+MIXPEEK_ADMIN_TOKEN=
 ```
 
-Then, run the application using Docker Compose:
+Then run it:
 
 ```bash
-docker-compose up
+poetry run python3 -m uvicorn main:app --reload
 ```
 
-### Configuration and Usage
+#### Inference Service
 
-Configure each service with your environment's specifics. Here's an illustrative setup:
+.env file:
 
 ```bash
-pip install mixpeek
+S3_BUCKET=
+AWS_ACCESS_KEY=
+AWS_SECRET_KEY=
+AWS_REGION=
+PYTHON_VERSION=
 ```
 
-init our client
-```python
-from mixpeek import Mixpeek
-
-mixpeek = Mixpeek("API-KEY") # if using localhost, you'll need to create one locally.
+```bash
+poetry run python3 -m uvicorn main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-### Parse
-```python
-# grab a url
+#### Distributed Queue
 
-corpus = mixpeek.parse.text.extract("ethan-resume.pdf")
+Also runs inside the api folder and uses the same .env file as `api`
 
-json.dumps(resp, indent=2)
+```bash
+celery -A db.service.celery_app worker --loglevel=info
 ```
 
-### Generate
-First we define our schema, then send it to the client alongside our corpus from above.
-```python
-class CompanyDetails(BaseModel):
-    company_name: str
+You now have 3 services running !
 
-class OutputSchema(BaseModel):
-    company_details: List[CompanyDetails]
+### API Interface
 
-output = mixpeek.generate.openai.chat(
-    model="gpt-4",
-    response_format=OutputSchema,
-    context=f"format this document and make sure to respond and adhere to the provided JSON format: {corpus}",
-    settings={"temperature": 1},
-)
+All methods are exposed as HTTP endpoints.
+
+- API swagger: https://api.mixpeek.com/docs/openapi.json
+- API Documentation: https://docs.mixpeek.com
+- Python SDK: https://github.com/mixpeek/mixpeek-python
+
+You'll first need to generate an api key via POST `/user`
+Use the `MIXPEEK_ADMIN_TOKEN` you defined in the api env file.
+
+```curl
+curl --location 'http://localhost:8000/users/private' \
+--header 'Authorization: MIXPEEK_ADMIN_TOKEN' \
+--header 'Content-Type: application/json' \
+--data-raw '{"email":"ethan@mixpeek.com"}'
 ```
 
-## Index
-You can also setup automated indexing workflows (WIP)
-```python
-mixpeek.listen("mongodb://hostname", output_schema=OutputSchema)
-```
+You can use any email, doesn't matter
 
+### Cloud Service
+
+If you want a completely managed version of Mixpeek: https://mixpeek.com/start
+
+We also have a transparent and predictible billing model: https://mixpeek.com/pricing
 
 #### Are we missing anything?
 
 - Email: ethan@mixpeek.com
 - Meeting: https://mixpeek.com/contact
-

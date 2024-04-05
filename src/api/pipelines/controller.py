@@ -101,6 +101,24 @@ async def create(
     return await pipeline_service.create(pipeline_request)
 
 
+# mixpeek.pipeline.get
+@router.get(
+    "/{pipeline_id}",
+    response_model=PipelineResponse,
+    openapi_extra={
+        "x-fern-sdk-method-name": "get",
+        "x-fern-sdk-group-name": ["pipeline"],
+    },
+)
+@route_exception_handler
+async def get(
+    request: Request,
+    pipeline_id: str,
+):
+    pipeline_service = PipelineAsyncService(request.index_id)
+    return await pipeline_service.get_one({"pipeline_id": pipeline_id})
+
+
 # mixpeek.pipeline.status
 @router.get(
     "/status/{task_id}",
