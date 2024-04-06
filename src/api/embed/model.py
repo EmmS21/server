@@ -14,7 +14,8 @@ class Models(str, Enum):
     MINILM = "sentence-transformers/all-MiniLM-L6-v2"
     NOMIC = "nomic-ai/nomic-embed-text-v1"
     JINA = "jinaai/jina-embeddings-v2-base-en"
-    NOMIC_2 = "nomic-ai/nomic-embed-text-v1.5"
+    # NOMIC_2 = "nomic-ai/nomic-embed-text-v1.5"
+    GOOGLE_BERT = "google-bert/bert-base-multilingual-uncased"
 
 
 class ConfigsRequest(BaseModel):
