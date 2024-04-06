@@ -39,7 +39,7 @@ class Pipeline(BaseModel):
         description="The ID of the pipeline",
     )
     enabled: Optional[bool] = Field(
-        default=False, description="Whether the pipeline is enabled"
+        default=True, description="Whether the pipeline is enabled"
     )
 
     connection: Optional[Connection] = Field(None, description="The connection")
