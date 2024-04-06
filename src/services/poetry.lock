@@ -729,6 +729,17 @@ torch = ">=1.12.1"
 torchvision = "*"
 
 [[package]]
+name = "einops"
+version = "0.7.0"
+description = "A new flavour of deep learning operations"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "einops-0.7.0-py3-none-any.whl", hash = "sha256:0f3096f26b914f465f6ff3c66f5478f9a5e380bb367ffc6493a68143fbbf1fd1"},
+    {file = "einops-0.7.0.tar.gz", hash = "sha256:b2b04ad6081a3b227080c9bf5e3ace7160357ff03043cd66cc5b2319eb7031d1"},
+]
+
+[[package]]
 name = "emoji"
 version = "2.10.1"
 description = "Emoji for Python"
@@ -4422,4 +4433,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "f68a3ebd9d644fda1d672f91f2be40a9605c19f87d4ca85760573467b880d84a"
+content-hash = "ac84148ab55bfed597d1a6245c1045ca9eff2b807aa17b5400a86fa9a0f59ff0"

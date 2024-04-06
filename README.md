@@ -32,7 +32,7 @@ We support every modality: **documents, images, video, audio and of course text.
 
 ### Integrations
 
-- [MongoDB](https://mixpeek.com/integrations/mongodb)
+- MongoDB: https://docs.mixpeek.com/integrations/mongodb
 
 ## Architecture
 
@@ -45,8 +45,6 @@ Mixpeek is structured into two main services, each designed to handle a specific
 These services are containerized and can be deployed on separate servers for optimal performance and scalability.
 
 ## Getting Started
-
-### Installation
 
 Clone the Mixpeek repository and navigate to the SDK directory:
 
