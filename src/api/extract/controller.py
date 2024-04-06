@@ -18,7 +18,6 @@ router = APIRouter()
         # "x-fern-sdk-group-name": ["extract"],
     },
 )
-@limiter.limit("10/minute")
 @route_exception_handler
 async def extract(
     request: Request,

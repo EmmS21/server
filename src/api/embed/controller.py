@@ -22,7 +22,6 @@ router = APIRouter()
     response_model=ConfigsResponse,
     openapi_extra={"x-fern-sdk-method-name": "get_model_config"},
 )
-@limiter.limit("10/minute")
 @route_exception_handler
 async def embed_config(request: Request, data: ConfigsRequest):
     embedding_handler = EmbeddingHandler()
@@ -35,7 +34,6 @@ async def embed_config(request: Request, data: ConfigsRequest):
     response_model=EmbeddingResponse,
     openapi_extra={"x-fern-sdk-method-name": "embed"},
 )
-@limiter.limit("10/minute")
 @route_exception_handler
 async def embed(request: Request, data: EmbeddingRequest):
     embedding_handler = EmbeddingHandler()
