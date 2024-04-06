@@ -38,6 +38,7 @@ modality_to_content_types = {
         "audio/flac",
         "audio/mp4",
         "audio/aac",
+        "audio/mp3",
     ],
     "video": [
         "video/mp4",
