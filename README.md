@@ -19,7 +19,7 @@
 </p>
 
 <h2 align="center">
-    <b>real-time multimodal inference pipeline. set and forget.</b>
+    <b>Real-Time Multimodal ETL Pipelines for GenAI</b>
 </h2>
 
 ## Overview
