@@ -19,7 +19,7 @@
 </p>
 
 <h2 align="center">
-    <b>Real-Time Multimodal ETL Pipelines for GenAI</b>
+  Real-Time Multimodal ETL Pipelines for GenAI
 </h2>
 
 ## Overview
