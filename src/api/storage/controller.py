@@ -44,6 +44,7 @@ async def insert_one(request: Request, file: UploadFile = File(...)):
     content = await file.read()
     # Now `form_data` contains all other form fields as arbitrary key-value pairs
     response_data = {"url": "123", "_id": "123", **form_data}
+    # placeholder
     return response_data
 
 
