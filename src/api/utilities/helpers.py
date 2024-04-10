@@ -58,3 +58,15 @@ def convert_objectid_to_str(item):
             elif isinstance(value, dict):
                 item[key] = convert_objectid_to_str(value)
     return item
+
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid objectid")
+        return str(v)
